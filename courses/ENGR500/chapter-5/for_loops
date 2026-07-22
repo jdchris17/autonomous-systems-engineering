@@ -1,0 +1,32 @@
+#for variable in sequence
+    #code to execute for each item
+
+basket_toys = ["feather", "ball", "laser pointer"]
+for toy in basket_toys:
+    print("Checking and inspectiong:", toy)
+
+#basket_toys = ["feather", "ball", "laser pointer"]
+#for x in basket_toys:
+    #print("Checking and inspectiong:", x)
+
+#basket_toys = ["feather", "ball", "laser pointer"]
+#for a in basket_toys:
+    #print("Checking and inspectiong:", a)
+#all those ^ do the exact same thing
+
+for i in range(5):
+    print(i)
+
+for x in range(5):
+    print("I love python!")
+
+for i in range(1, 6):
+    print(i)
+
+for i in range(1, 10, 3):
+    print(i)
+#range(start, stop, step)
+
+for number in range(5, 0, -1):
+    print("Countdown:", number)
+print("Blast off!")
