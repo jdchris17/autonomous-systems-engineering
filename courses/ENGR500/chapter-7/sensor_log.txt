@@ -1,0 +1,9 @@
+01:47:28 Camera OK
+01:47:28 IMU OK
+01:47:28 Clock OK
+01:47:28 Camera OK
+01:47:28 IMU OK
+01:47:28 Clock OK
+01:47:28 Camera OK
+01:47:28 IMU OK
+01:47:28 Clock OK

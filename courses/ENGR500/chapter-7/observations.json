@@ -1,0 +1,46 @@
+[
+  {
+    "timestamp": "02:01:24",
+    "image_name": "IMG_0001.jpg",
+    "visible_stars": [
+      "Polaris",
+      "Vega",
+      "Deneb"
+    ],
+    "imu_packet": {
+      "time": 0.01,
+      "roll": 0.11,
+      "pitch": -0.01,
+      "yaw": 182.0
+    }
+  },
+  {
+    "timestamp": "02:01:29",
+    "image_name": "IMG_0002.jpg",
+    "visible_stars": [
+      "Polaris",
+      "Vega"
+    ],
+    "imu_packet": {
+      "time": 5.02,
+      "roll": 0.13,
+      "pitch": -0.02,
+      "yaw": 182.4
+    }
+  },
+  {
+    "timestamp": "02:01:34",
+    "image_name": "IMG_0003.jpg",
+    "visible_stars": [
+      "Polaris",
+      "Deneb",
+      "Altair"
+    ],
+    "imu_packet": {
+      "time": 10.03,
+      "roll": 0.1,
+      "pitch": 0.0,
+      "yaw": 183.1
+    }
+  }
+]
