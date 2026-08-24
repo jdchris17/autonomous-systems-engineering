@@ -1,0 +1,291 @@
+"""Eigenvalue challenge problems: power iteration convergence, a
+mass-spring system's normal modes, a PCA teaser, and a design note on
+attitude-error covariance.
+"""
+
+import math
+import pathlib
+import random
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+from matrix import Matrix
+from least_squares import dot, gram_schmidt, norm
+from eigen import diagonalize_symmetric, orthogonal_columns, power_iteration, verify_diagonalization
+
+OUTPUT_DIR = pathlib.Path(__file__).parent
+
+
+def symmetric_with_known_eigenvalues(eigenvalues, seed=0):
+    """A = P D P^T for a known diagonal D and a random orthonormal P, so
+    the exact eigenvalues/eigenvectors are known in advance."""
+    n = len(eigenvalues)
+    rng = random.Random(seed)
+    raw_vectors = [[rng.uniform(-3, 3) for _ in range(n)] for _ in range(n)]
+    orthonormal_rows = gram_schmidt(raw_vectors)
+    p = Matrix([list(row) for row in zip(*orthonormal_rows)])  # columns = eigenvectors
+    d = Matrix([[eigenvalues[i] if i == j else 0.0 for j in range(n)] for i in range(n)])
+    a = p * d * p.transpose()
+    return a, p, d
+
+
+# -- Challenge 1: power iteration convergence --------------------------------
+# Math: power iteration's error shrinks by a factor of |lambda2/lambda1|
+# every step, so both the eigenvalue gap AND how much of the true dominant
+# eigenvector was already present in the starting guess control how many
+# iterations are needed.
+
+def challenge_1():
+    print("Challenge 1: power iteration convergence")
+    print("  effect of eigenvalue gap (fixed random starting vector, seed=0):")
+    gap_cases = {
+        "wide gap  {10, 1}": [10, 1],
+        "medium gap {10, 6}": [10, 6],
+        "narrow gap {10, 9.5}": [10, 9.5],
+        "very narrow {10, 9.9}": [10, 9.9],
+    }
+    for label, eigenvalues in gap_cases.items():
+        a, _, _ = symmetric_with_known_eigenvalues(eigenvalues, seed=1)
+        result = power_iteration(a, num_iterations=20000, tol=1e-10, seed=0)
+        print(f"    {label:<24} -> converged={result.converged}  iterations={result.iterations}")
+
+    print("\n  effect of the starting vector, for a fixed matrix (eigenvalues {10, 9}):")
+    a, p, _ = symmetric_with_known_eigenvalues([10, 9], seed=2)
+    dominant_eigenvector = [row[0] for row in p.rows]
+    second_eigenvector = [row[1] for row in p.rows]
+
+    print("    several random starting vectors:")
+    # offset seeds well clear of the matrix-construction seed (2): a fresh
+    # Random(seed) drawing from a range symmetric about zero (like
+    # uniform(-3, 3) above and uniform(-1, 1) here) produces the same
+    # *direction* for matching seeds regardless of the range's width, so
+    # reusing seed=2 here would silently start already at the eigenvector
+    for seed in (101, 102, 103, 104, 105):
+        result = power_iteration(a, num_iterations=20000, tol=1e-10, seed=seed)
+        print(f"      seed={seed} -> iterations={result.iterations}")
+
+    close_start = power_iteration(a, num_iterations=20000, tol=1e-10, initial_vector=dominant_eigenvector)
+    print(f"    starting AT the true dominant eigenvector -> iterations={close_start.iterations}")
+
+    orthogonal_start = power_iteration(
+        a, num_iterations=20000, tol=1e-10, initial_vector=second_eigenvector
+    )
+    print(
+        f"    starting exactly at the SECOND eigenvector  -> converged={orthogonal_start.converged}, "
+        f"iterations={orthogonal_start.iterations}, eigenvalue={orthogonal_start.eigenvalue:.6f}  "
+        f"(true dominant is 10)"
+    )
+    print(
+        "    -> this is a genuine failure mode, not just slow convergence: if b0 is\n"
+        "       EXACTLY a non-dominant eigenvector, A b0 = lambda2*b0 exactly, so the\n"
+        "       normalized iterate reproduces b0 forever -- the loop reports\n"
+        "       'converged' after a single step, but to the WRONG eigenpair (9\n"
+        "       instead of 10). Power iteration has no way to detect this; it only\n"
+        "       checks whether the direction stopped changing, not whether it's the\n"
+        "       right direction. In practice, a random starting vector has zero\n"
+        "       (continuous-probability) chance of landing exactly on an eigenvector,\n"
+        "       so this specific trap is rare in the wild -- but rounding CAN still\n"
+        "       nudge an initial vector that's suspiciously close (not exact) toward\n"
+        "       the wrong eigenvector for a while before finally escaping toward the\n"
+        "       true dominant one, which is a subtler version of the same risk."
+    )
+    print()
+
+
+# -- Challenge 2: mass-spring system -----------------------------------------
+# Math: for 2 unit masses connected wall-spring-mass-spring-mass-spring-wall
+# with spring constant k=1, Newton's second law gives M x'' = -K x with
+# K = [[2,-1],[-1,2]]. Assuming a solution x = v*cos(wt), this becomes an
+# eigenvalue problem: K v = w^2 v. So K's eigenvalues are the system's
+# squared natural frequencies, and its eigenvectors are the mode shapes --
+# the "natural directions" of vibration where every mass moves in a fixed
+# ratio, sinusoidally, at a single shared frequency.
+
+def challenge_2():
+    print("Challenge 2: 2-mass, 3-spring system stiffness matrix")
+    k = Matrix([[2, -1], [-1, 2]])
+    print(f"  K =\n  {k.pretty_print()}".replace("\n", "\n  "))
+
+    p, d = diagonalize_symmetric(k, seed=0)
+    modes = sorted(range(2), key=lambda i: d.rows[i][i])
+    for rank, i in enumerate(modes, start=1):
+        eigenvalue = d.rows[i][i]
+        omega = math.sqrt(eigenvalue)
+        shape = [round(p.rows[r][i], 4) for r in range(2)]
+        print(f"  mode {rank}: eigenvalue={eigenvalue:.4f}  natural frequency w={omega:.4f}  mode shape={shape}")
+
+    print(
+        "  -> eigenvalue = squared natural frequency of that vibration mode;\n"
+        "     eigenvector = the mode shape, i.e. the fixed ratio in which the two\n"
+        "     masses move relative to each other while oscillating at that single\n"
+        "     shared frequency. The low mode (~[0.71, 0.71]) is the two masses\n"
+        "     moving IN PHASE together -- the middle spring barely stretches, so\n"
+        "     it's soft/low-frequency. The high mode (~[0.71, -0.71]) is the masses\n"
+        "     moving in OPPOSITE directions -- the middle spring stretches twice as\n"
+        "     much, so it's stiffer and vibrates faster. Any arbitrary initial\n"
+        "     displacement is just some mix of these two natural directions."
+    )
+    print()
+
+
+# -- Challenge 3: PCA teaser --------------------------------------------------
+# Math: the covariance matrix C = (X^T X) / (n-1) of mean-centered data is
+# always symmetric, so it's always diagonalizable with orthogonal
+# eigenvectors (Challenge 2's machinery applies directly). Its eigenvectors
+# point along the directions of maximum spread in the data, and its
+# eigenvalues are the variance along each of those directions -- this pair
+# (eigenvector = direction, eigenvalue = variance along it) is exactly what
+# PCA calls a "principal component."
+
+def challenge_3():
+    print("Challenge 3: covariance matrix and principal directions")
+    random.seed(3)
+    n = 200
+    # correlated cloud: start with independent noise, then shear/scale it
+    raw = [(random.gauss(0, 1), random.gauss(0, 1)) for _ in range(n)]
+    xs = [3.0 * x + 0.0 for x, y in raw]
+    ys = [1.8 * x + 1.0 * y for x, y in raw]
+
+    mean_x, mean_y = sum(xs) / n, sum(ys) / n
+    cx = [x - mean_x for x in xs]
+    cy = [y - mean_y for y in ys]
+
+    cov_xx = sum(v * v for v in cx) / (n - 1)
+    cov_yy = sum(v * v for v in cy) / (n - 1)
+    cov_xy = sum(cx[i] * cy[i] for i in range(n)) / (n - 1)
+    covariance = Matrix([[cov_xx, cov_xy], [cov_xy, cov_yy]])
+    print(f"  covariance matrix =\n  {covariance.pretty_print()}".replace("\n", "\n  "))
+
+    p, d = diagonalize_symmetric(covariance, seed=0)
+    order = sorted(range(2), key=lambda i: -d.rows[i][i])  # largest variance first
+    print(f"  P has orthogonal columns = {orthogonal_columns(p)}")
+    for rank, i in enumerate(order, start=1):
+        variance = d.rows[i][i]
+        direction = [round(p.rows[r][i], 4) for r in range(2)]
+        print(f"  principal component {rank}: variance={variance:.4f}  direction={direction}")
+
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.scatter(xs, ys, s=12, alpha=0.5, label="data")
+    colors = ["red", "orange"]
+    for rank, i in enumerate(order):
+        variance = d.rows[i][i]
+        direction = [p.rows[r][i] for r in range(2)]
+        length = 2 * math.sqrt(variance)  # 2 std devs, just for a visible arrow
+        ax.annotate(
+            "",
+            xy=(mean_x + length * direction[0], mean_y + length * direction[1]),
+            xytext=(mean_x, mean_y),
+            arrowprops=dict(arrowstyle="->", color=colors[rank], lw=2),
+        )
+    ax.plot(mean_x, mean_y, "ko", markersize=5)
+    ax.set_aspect("equal")
+    ax.set_title("Challenge 3: data cloud with principal directions")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    out_path = OUTPUT_DIR / "challenge_5_3_pca.png"
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  saved plot -> {out_path}")
+    print(
+        "  -> the red arrow (largest eigenvalue) points along the direction the\n"
+        "     data is most spread out in; the orange arrow (smaller eigenvalue) is\n"
+        "     orthogonal to it and captures much less spread. This IS PCA's first\n"
+        "     step: eigenvectors of the covariance matrix are the principal\n"
+        "     directions, and their eigenvalues are how much variance lies along\n"
+        "     each one."
+    )
+    print()
+
+
+# -- Challenge 4: design note --------------------------------------------------
+
+DESIGN_NOTE = """
+Design Note: One Dominant Eigenvalue in an Attitude-Error Covariance
+========================================================================
+
+Setup: repeated star-field observations produce slightly different
+attitude estimates due to measurement noise. Collecting many such
+estimates and computing their covariance matrix gives a 3x3 (or similar)
+error covariance. Suppose its eigendecomposition reveals one eigenvalue
+much larger than the rest.
+
+What this does NOT mean: it is a mistake to read this as simply "the
+attitude estimate has a lot of error" or to summarize it as a single
+error number. A covariance matrix isn't just a mound of error -- it's a
+shape, and the eigendecomposition is precisely what reveals that shape:
+the eigenvectors are the covariance ellipsoid's axes, and the eigenvalues
+are the variance along each axis (exactly the principal-component
+relationship demonstrated in Challenge 3, just applied to attitude error
+instead of a 2D data cloud).
+
+What one dominant eigenvalue DOES mean: the error ellipsoid is not a
+sphere -- it's a cigar, stretched out almost entirely along one specific
+eigenvector direction, with comparatively tight, well-constrained error
+along the other axes. In other words, the navigation solution isn't
+"noisy" in some vague overall sense -- it is precisely and specifically
+uncertain about ONE particular rotation axis, and confident about
+everything orthogonal to it.
+
+Why that happens, physically: this pattern usually points to a weak
+observability direction rather than generic sensor noise. If the observed
+stars happen to be clustered close together in the sky, or lie close to
+a single great circle, small rotations about the axis through that
+cluster barely change any star's predicted image position -- so that
+particular rotation is only weakly constrained by the data, while
+rotations about other axes shift many star positions and are tightly
+constrained. The dominant eigenvector is, in effect, pointing out exactly
+which physical rotation the current star geometry fails to pin down.
+
+Why this matters for the navigation solution: a single scalar
+"attitude error" number would hide this entirely and give false
+confidence -- the true state could be badly wrong along that one
+direction while every other axis is genuinely accurate. Consequences for
+the system:
+
+  - Downstream error budgets must be direction-aware: whatever the
+    attitude estimate feeds (pointing, guidance, control) should be
+    evaluated for sensitivity to that specific eigenvector's axis, not
+    to error "in general."
+  - The fix is targeted, not generic: adding an arbitrary extra star
+    observation barely helps if it's in roughly the same weakly-observed
+    cluster; what actually shrinks the dominant eigenvalue is a new
+    observation (a star, a gyro, a horizon sensor) whose sensitivity
+    points along that same weak eigenvector -- i.e. one that actually
+    constrains the specific rotation the current geometry misses.
+  - This is the same "focus on the dominant mode" idea from the bridge
+    vibration question, mirrored: there, the dominant mode was the
+    direction the STRUCTURE responds most strongly along; here, the
+    dominant eigenvalue is the direction the ESTIMATE is least
+    constrained along. In both cases, the eigenvector tells you exactly
+    where to concentrate engineering attention -- added damping and
+    structural analysis for the bridge, and additional or repositioned
+    observations for the navigation solution -- rather than treating the
+    problem as uniform across all directions.
+"""
+
+
+def challenge_4():
+    print("Challenge 4: design note")
+    print(DESIGN_NOTE)
+
+    # small illustrative demo: a covariance with one dominant eigenvalue
+    covariance = Matrix([[25.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.8]])
+    p, d = diagonalize_symmetric(covariance, seed=0)
+    order = sorted(range(3), key=lambda i: -d.rows[i][i])
+    print("  illustrative covariance eigenvalues (variance along each principal axis):")
+    for rank, i in enumerate(order, start=1):
+        print(f"    axis {rank}: variance={d.rows[i][i]:.3f}  std dev={math.sqrt(d.rows[i][i]):.3f}")
+    print(
+        "  -> axis 1's standard deviation is ~5x axis 2's and ~5.6x axis 3's --\n"
+        "     the error ellipsoid is heavily elongated along just one direction."
+    )
+
+
+if __name__ == "__main__":
+    challenge_1()
+    challenge_2()
+    challenge_3()
+    challenge_4()
