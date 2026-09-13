@@ -1,5 +1,7 @@
 {
     "python.analysis.extraPaths": [
-        "./module-3"
+        "./module-3",
+        "./module-7",
+        "./module-8"
     ]
 }
