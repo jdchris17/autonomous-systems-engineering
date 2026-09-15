@@ -3,5 +3,6 @@
         "./module-3",
         "./module-7",
         "./module-8"
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

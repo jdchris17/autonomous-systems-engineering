@@ -77,6 +77,51 @@ def quaternion_to_rotation_matrix(q):
     ])
 
 
+def rotation_matrix_to_quaternion(R):
+    """Return the scalar-first quaternion encoded by a rotation matrix."""
+    R = np.asarray(R, dtype=float)
+    if R.shape != (3, 3):
+        raise ValueError("rotation matrix must have shape (3, 3)")
+
+    trace = np.trace(R)
+    if trace > 0.0:
+        scale = 2.0 * np.sqrt(trace + 1.0)
+        q = np.array([
+            0.25 * scale,
+            (R[2, 1] - R[1, 2]) / scale,
+            (R[0, 2] - R[2, 0]) / scale,
+            (R[1, 0] - R[0, 1]) / scale,
+        ])
+    else:
+        diagonal = np.diag(R)
+        index = int(np.argmax(diagonal))
+        if index == 0:
+            scale = 2.0 * np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2])
+            q = np.array([
+                (R[2, 1] - R[1, 2]) / scale,
+                0.25 * scale,
+                (R[0, 1] + R[1, 0]) / scale,
+                (R[0, 2] + R[2, 0]) / scale,
+            ])
+        elif index == 1:
+            scale = 2.0 * np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2])
+            q = np.array([
+                (R[0, 2] - R[2, 0]) / scale,
+                (R[0, 1] + R[1, 0]) / scale,
+                0.25 * scale,
+                (R[1, 2] + R[2, 1]) / scale,
+            ])
+        else:
+            scale = 2.0 * np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1])
+            q = np.array([
+                (R[1, 0] - R[0, 1]) / scale,
+                (R[0, 2] + R[2, 0]) / scale,
+                (R[1, 2] + R[2, 1]) / scale,
+                0.25 * scale,
+            ])
+    return quaternion_normalize(q)
+
+
 # ---------------------------------------------------------------------------
 # convenience
 # ---------------------------------------------------------------------------
