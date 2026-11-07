@@ -1,0 +1,122 @@
+{
+  "h": 0.05,
+  "T_end": 40.0,
+  "c_nom": 0.2,
+  "sigma_w": [
+    0.2,
+    0.02
+  ],
+  "controller": {
+    "k_e": 1.2207626943782275,
+    "k_xi": -0.4938961946994511,
+    "k_par": 0.3,
+    "k_perp": 0.3,
+    "k_psi": 1.0,
+    "v_target_lim": [
+      0.5,
+      4.0
+    ],
+    "u_a_lim": 2.0,
+    "u_w_lim": 0.5
+  },
+  "scenarios": {
+    "true-state benchmark": {
+      "controller_input": "truth",
+      "c_true": 0.2,
+      "yaw_gain": 1.0,
+      "d_a": 0.0,
+      "d_w": 0.0,
+      "dist_window": null,
+      "outage": null,
+      "pos_sd_late": null,
+      "late_from": null,
+      "u_w_lim": 0.5
+    },
+    "nominal": {
+      "controller_input": "estimate",
+      "c_true": 0.2,
+      "yaw_gain": 1.0,
+      "d_a": 0.0,
+      "d_w": 0.0,
+      "dist_window": null,
+      "outage": null,
+      "pos_sd_late": null,
+      "late_from": null,
+      "u_w_lim": 0.5
+    },
+    "disturbance": {
+      "controller_input": "estimate",
+      "c_true": 0.2,
+      "yaw_gain": 1.0,
+      "d_a": -0.3,
+      "d_w": 0.03,
+      "dist_window": [
+        15.0,
+        22.0
+      ],
+      "outage": null,
+      "pos_sd_late": null,
+      "late_from": null,
+      "u_w_lim": 0.5
+    },
+    "sensor failure": {
+      "controller_input": "estimate",
+      "c_true": 0.2,
+      "yaw_gain": 1.0,
+      "d_a": 0.0,
+      "d_w": 0.0,
+      "dist_window": null,
+      "outage": [
+        18.0,
+        28.0
+      ],
+      "pos_sd_late": 2.0,
+      "late_from": 30.0,
+      "u_w_lim": 0.5
+    },
+    "model mismatch": {
+      "controller_input": "estimate",
+      "c_true": 0.35,
+      "yaw_gain": 0.8,
+      "d_a": 0.0,
+      "d_w": 0.0,
+      "dist_window": null,
+      "outage": null,
+      "pos_sd_late": null,
+      "late_from": null,
+      "u_w_lim": 0.5
+    },
+    "authority limit": {
+      "controller_input": "estimate",
+      "c_true": 0.2,
+      "yaw_gain": 1.0,
+      "d_a": 0.0,
+      "d_w": 0.0,
+      "dist_window": null,
+      "outage": null,
+      "pos_sd_late": null,
+      "late_from": null,
+      "u_w_lim": 0.05
+    }
+  },
+  "seeds": {
+    "demo": 2,
+    "multi": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  },
+  "targets": {
+    "nominal_position_rmse_m": 1.0,
+    "outage_peak_position_error_m": 3.0,
+    "outage_peak_scored_from_s": 18.0
+  }
+}

@@ -1,0 +1,21 @@
+scenario,seed,metric,value,target,pass,track_rmse,track_peak_from_18,nav_pos_rmse,pos_sd_max_18_28,finite,min_eig_P
+nominal,0,track_rmse,0.344051,1,True,0.344051,0.503904,0.271714,0.382584,True,2.01539e-07
+nominal,1,track_rmse,0.449775,1,True,0.449775,0.556889,0.379662,0.383126,True,2.00432e-07
+nominal,2,track_rmse,0.389764,1,True,0.389764,0.363209,0.356025,0.387797,True,2.0406e-07
+nominal,3,track_rmse,0.680764,1,True,0.680764,0.953381,0.469945,0.377527,True,2.00467e-07
+nominal,4,track_rmse,0.459867,1,True,0.459867,0.661957,0.359075,0.382129,True,2.02818e-07
+nominal,5,track_rmse,0.406515,1,True,0.406515,0.453251,0.329676,0.388346,True,2.01512e-07
+nominal,6,track_rmse,0.666079,1,True,0.666079,0.981694,0.447129,0.383361,True,2.01034e-07
+nominal,7,track_rmse,0.356991,1,True,0.356991,0.468824,0.296139,0.386603,True,2.0188e-07
+nominal,8,track_rmse,0.471307,1,True,0.471307,0.647115,0.361751,0.382201,True,2.01001e-07
+nominal,9,track_rmse,0.701052,1,True,0.701052,0.419529,0.417334,0.385326,True,1.99037e-07
+sensor failure,0,track_peak_from_18,0.790308,3,True,0.494209,0.790308,0.450143,1.40405,True,2.02642e-07
+sensor failure,1,track_peak_from_18,1.45962,3,True,0.689619,1.45962,0.588566,1.41475,True,2.02011e-07
+sensor failure,2,track_peak_from_18,0.356284,3,True,0.396115,0.356284,0.36563,1.43829,True,2.05153e-07
+sensor failure,3,track_peak_from_18,0.953381,3,True,0.684773,0.953381,0.464103,1.37263,True,2.01602e-07
+sensor failure,4,track_peak_from_18,0.710424,3,True,0.402465,0.710424,0.368909,1.41378,True,2.04017e-07
+sensor failure,5,track_peak_from_18,1.00521,3,True,0.562201,1.00521,0.437666,1.42748,True,2.02972e-07
+sensor failure,6,track_peak_from_18,2.49292,3,True,1.14741,2.49292,0.885589,1.40703,True,2.01758e-07
+sensor failure,7,track_peak_from_18,0.763015,3,True,0.520166,0.763015,0.433542,1.4366,True,2.02958e-07
+sensor failure,8,track_peak_from_18,0.697559,3,True,0.555648,0.697559,0.448462,1.41088,True,2.02429e-07
+sensor failure,9,track_peak_from_18,1.09966,3,True,0.813848,1.09966,0.542012,1.4184,True,2.00025e-07
