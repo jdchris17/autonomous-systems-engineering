@@ -1,0 +1,204 @@
+==============================================================================================================
+Experiment A: synthetic 32 x 32 patches
+  development: 60 images, 2982 patches, star fraction 0.537; per-image star fraction 0.28-0.76
+  untouched test: 30 images, 1499 patches, star fraction 0.542; per-image star fraction 0.39-0.77
+  The two sets share no image ids: every split in this module is by image.
+
+  Class / subtype proportions (development):
+    bright star    404 (13.5%)   true SNR median   59.5 [10-90%: 27.9-355.7], sigma_major 1.06, axis ratio 0.89
+    faint star    1197 (40.1%)   true SNR median    8.0 [10-90%: 4.7-18.4], sigma_major 1.08, axis ratio 0.88
+    hot pixel      341 (11.4%)   true SNR median   19.7 [10-90%: 6.1-54.4], sigma_major 0.45, axis ratio 1.00
+    diffuse        339 (11.4%)   true SNR median   12.5 [10-90%: 6.0-18.7], sigma_major 3.44, axis ratio 0.76
+    elongated      334 (11.2%)   true SNR median   33.2 [10-90%: 10.9-53.9], sigma_major 3.61, axis ratio 0.17
+    noise peak     367 (12.3%)   true SNR median    5.4 [10-90%: 4.3-6.7], sigma_major 1.16, axis ratio 0.80
+
+  Engineering question - where does the pixel variance come from? (development set)
+    Share of the total sum of squares around the mean image (cross terms in brackets):
+      background level (per image/patch)    20.3%
+      source signal                         78.2%
+      noise                                  1.4%
+      (cross terms)                          0.1%
+    Inside the source signal (counterfactuals):
+      position (source minus the same source re-rendered at the centre): 71.9% of source SS
+      shape only (centred, every source scaled to the median flux):      0.2% of source SS
+      -> the remainder is dominated by brightness differences (flux spans 52-13773 e-, 1-99%)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_a_contact_sheet.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_a_parameters.png
+
+==============================================================================================================
+Experiment B: PCA from scratch on X (2982 x 1024), held-out 1499 patches
+
+  1. explained-variance ratio: max |mine - sklearn| = 2.22e-16; explained variance max relative diff 4.22e-15
+  2. orthonormality: max |V V^T - I| = 4.70e-15
+     |cos| between matching components: first 20 min 1.000000; components with |cos| < 0.99: 0 of 1024
+     near-equal singular-value pairs among the first 20 (gap < 2%): [(19, 20)] -> individual vectors may rotate inside such pairs
+  3. projection matrices and reconstructions vs sklearn (held-out patches):
+          k   |P_mine - P_sk|_F   max |Xhat diff|   train MSE    test MSE  cum. EV
+     (PCAFromScratch(16) vs slicing the full fit: max diff 0.0e+00)
+          1            2.99e-16          5.46e-12    3336.467    2180.061   0.4575
+          2            3.44e-15          3.82e-11    2005.152    1400.656   0.6740
+          4            1.12e-15          4.18e-12     480.579     619.348   0.9219
+          8            2.77e-15          8.87e-12     114.726     194.048   0.9813
+         16            1.72e-14          1.09e-11      87.655     101.248   0.9857
+         32            6.03e-14          2.18e-11      80.161      87.724   0.9870
+         64            1.19e-12          2.18e-11      73.322      84.049   0.9881
+        128            4.28e-13          2.18e-11      61.981      78.091   0.9899
+        256            4.54e-13          2.18e-11      44.186      66.588   0.9928
+        512            4.11e-13          2.18e-11      20.376      44.189   0.9967
+       1024            1.47e-13          2.18e-11       0.000       0.000   1.0000
+  4. error decreases with k: train True, test True
+  5. full representation (k = 1024, rank 1024): max |X - Xhat| = 5.82e-11 (pixel values up to 38015)
+     N < D case (500 patches): 500 components, numerical rank 499 (= N - 1 after centring); max |X - Xhat| = 1.82e-11
+
+  Engineering question: SVD of X vs eigen-decomposition of the covariance matrix
+    patches (D = 1024): SVD 1.94 s, covariance + eigh 0.38 s; eigenvalue spread 2.2e+05; max relative eigenvalue disagreement 6.1e-13
+    test matrix with singular values 1 ... 1e-12: SVD recovers them to 1% down to 1e-12; covariance route only down to 2e-08 (~ sqrt(machine eps) = 1e-08)
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_b_pca_validation.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_b_components.png
+
+==============================================================================================================
+Experiment C: reconstruction and information loss (PCA fit on development images only)
+
+  Part 2 - reconstruction MSE in original pixel units [e-^2] and cumulative explained variance
+       k    A: train / test / vs noise-free / cum.EV    B: train / test / vs noise-free / cum.EV    C: train / test / vs noise-free / cum.EV
+       1         3336.5 /  2180.1 /  2095.3 /  0.458         2128.5 /  1843.3 /  1758.6 /  0.565         2220.1 /  1491.3 /  1407.7 /  0.013
+       2         2005.2 /  1400.7 /  1316.2 /  0.674          854.0 /   863.3 /   779.7 /  0.826         1054.6 /   749.7 /   666.1 /  0.026
+       4          480.6 /   619.3 /   535.4 /  0.922          306.2 /   374.4 /   290.3 /  0.937          761.6 /   583.6 /   500.3 /  0.043
+       8          114.7 /   194.0 /   109.9 /  0.981          107.1 /   161.5 /    78.0 /  0.978          537.4 /   422.9 /   340.9 /  0.067
+      16           87.7 /   101.2 /    19.7 /  0.986           87.1 /   101.0 /    19.7 /  0.982          346.7 /   302.5 /   222.5 /  0.098
+      32           80.2 /    87.7 /     9.4 /  0.987           80.1 /    87.7 /     9.6 /  0.984          327.2 /   287.6 /   210.3 /  0.143
+      64           73.3 /    84.0 /    11.1 /  0.988           73.3 /    84.0 /    11.2 /  0.985          300.3 /   269.5 /   197.4 /  0.224
+     128           62.0 /    78.1 /    15.7 /  0.990           61.9 /    78.1 /    15.8 /  0.987          260.6 /   237.5 /   175.8 /  0.362
+    noise variance of the test patches (mean B + RN^2): 83.8
+
+  Part 3 - physical-detail preservation on held-out patches (vs the same measurement on the noise-free source)
+    approach                      k centroid bright centroid faint offset slope width err round err peak ratio hot-px peak elong round faint SNR>=5
+    original noisy patch          -        0.056 px       0.326 px        0.992      2.8%     0.033       1.01        0.98        0.17        69.6%
+    noise-free truth              -        0.000 px       0.000 px        1.000      0.0%     0.000       1.00        1.00        0.16        65.6%
+    A raw                         1        1.225 px       1.404 px        0.425     42.8%     0.054       0.58        0.30        0.88        72.5%
+    A raw                         2        1.001 px       1.609 px        0.031     40.8%     0.094       0.68        0.43        0.72        76.6%
+    A raw                         4        0.346 px       0.511 px        0.640     18.6%     0.128       0.81        0.30        0.68        93.8%
+    A raw                         8        0.136 px       0.303 px        0.982      7.2%     0.047       0.93        0.37        0.41        74.2%
+    A raw                        16        0.061 px       0.303 px        0.984      3.0%     0.040       1.00        0.66        0.28        70.9%
+    A raw                        32        0.052 px       0.305 px        0.989      2.4%     0.032       1.00        0.93        0.21        68.9%
+    A raw                        64        0.054 px       0.313 px        0.991      2.2%     0.034       1.00        0.94        0.20        69.2%
+    A raw                       128        0.054 px       0.317 px        0.991      2.4%     0.034       1.00        0.95        0.20        69.4%
+    B background-subtracted       1        1.157 px       1.243 px        0.091     41.6%     0.062       0.57        0.26        0.90        99.5%
+    B background-subtracted       2        0.719 px       0.850 px        0.238     29.1%     0.088       0.69        0.28        0.83        93.1%
+    B background-subtracted       4        0.185 px       0.378 px        0.861     15.5%     0.095       0.85        0.26        0.57        80.8%
+    B background-subtracted       8        0.130 px       0.308 px        0.982      6.0%     0.043       0.94        0.40        0.40        72.4%
+    B background-subtracted      16        0.057 px       0.315 px        0.983      2.8%     0.040       1.00        0.72        0.29        69.4%
+    B background-subtracted      32        0.051 px       0.300 px        0.989      2.3%     0.035       1.00        0.93        0.20        69.1%
+    B background-subtracted      64        0.053 px       0.316 px        0.991      2.5%     0.036       1.00        0.94        0.19        70.2%
+    B background-subtracted     128        0.053 px       0.316 px        0.991      2.4%     0.034       1.00        0.95        0.19        70.1%
+    C bg-sub + flux-normalised    1        0.736 px       0.818 px        0.745     29.6%     0.109       0.69        0.23        0.95        55.3%
+    C bg-sub + flux-normalised    2        0.299 px       0.406 px        0.793     14.2%     0.168       0.84        0.29        0.79        60.0%
+    C bg-sub + flux-normalised    4        0.201 px       0.329 px        0.835      7.3%     0.113       1.00        0.41        0.72        60.5%
+    C bg-sub + flux-normalised    8        0.141 px       0.296 px        0.888      4.9%     0.078       0.98        0.73        0.62        64.0%
+    C bg-sub + flux-normalised   16        0.110 px       0.282 px        0.924      4.6%     0.054       0.98        0.85        0.54        65.5%
+    C bg-sub + flux-normalised   32        0.105 px       0.278 px        0.927      4.4%     0.050       0.98        0.86        0.49        64.6%
+    C bg-sub + flux-normalised   64        0.097 px       0.282 px        0.934      4.3%     0.049       0.98        0.88        0.46        66.0%
+    C bg-sub + flux-normalised  128        0.086 px       0.276 px        0.943      3.9%     0.045       0.98        0.89        0.40        66.0%
+    offset slope: regression of measured x-offset on the true x-offset for bright stars (1 = unbiased)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_c_gallery_A.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_c_gallery_B.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_c_gallery_C.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_c_curves.png
+
+==============================================================================================================
+Experiment D: PCA as a classification representation (grouped 5-fold CV on 60 development images)
+
+  Part 2 - grouped-CV ROC AUC (mean +- fold sd, best hyperparameters for each cell)
+    representation              logistic                   KNN               RBF SVM
+    hand                   0.787 +- 0.019         0.907 +- 0.011         0.903 +- 0.016
+    raw                    0.660 +- 0.013         0.602 +- 0.027         0.671 +- 0.014
+    PCA-B(2)               0.597 +- 0.039         0.646 +- 0.008         0.594 +- 0.037
+    PCA-B(4)               0.596 +- 0.039         0.768 +- 0.025         0.614 +- 0.028
+    PCA-B(8)               0.672 +- 0.021         0.802 +- 0.014         0.797 +- 0.018
+    PCA-B(16)              0.753 +- 0.012         0.786 +- 0.018         0.859 +- 0.008
+    PCA-B(32)              0.778 +- 0.018         0.771 +- 0.010         0.833 +- 0.012
+    PCA-B(64)              0.782 +- 0.019         0.734 +- 0.016         0.811 +- 0.008
+    PCA-B(128)             0.778 +- 0.014         0.665 +- 0.038         0.782 +- 0.015
+    PCA-C(2)               0.493 +- 0.027         0.738 +- 0.032         0.752 +- 0.025
+    PCA-C(4)               0.663 +- 0.021         0.852 +- 0.021         0.859 +- 0.017
+    PCA-C(8)               0.663 +- 0.022         0.894 +- 0.017         0.893 +- 0.014
+    PCA-C(16)              0.688 +- 0.013         0.905 +- 0.015         0.901 +- 0.017
+    PCA-C(32)              0.690 +- 0.015         0.894 +- 0.018         0.898 +- 0.019
+    PCA-C(64)              0.689 +- 0.007         0.881 +- 0.013         0.892 +- 0.023
+    PCA-C(128)             0.687 +- 0.010         0.855 +- 0.015         0.875 +- 0.015
+
+  Final evaluation: hyperparameters and k chosen by grouped CV, refit on all development images, scored once on the 30 untouched test images
+    classifier representation hyperparameters         CV AUC  test AUC precision  recall   fit s  ms/1000  AUC @15%  prec @15%
+    logistic   hand           {'C': 10}                0.787     0.793     0.760   0.680    0.01     0.00     0.770      0.301
+    logistic   raw            {'C': 1}                 0.660     0.697     0.667   0.642    0.17     0.00     0.730      0.246
+    logistic   PCA-B(64)      {'C': 10}                0.782     0.786     0.710   0.768    0.04     0.00     0.786      0.261
+    logistic   PCA-C(32)      {'C': 1}                 0.690     0.726     0.700   0.793    0.01     0.00     0.706      0.249
+    KNN        hand           {'k': 45}                0.907     0.893     0.776   0.831    0.01     0.02     0.912      0.378
+    KNN        raw            {'k': 45}                0.602     0.613     0.583   0.883    0.00     0.11     0.625      0.183
+    KNN        PCA-B(8)       {'k': 5}                 0.802     0.801     0.746   0.739    0.02     0.05     0.804      0.310
+    KNN        PCA-C(16)      {'k': 15}                0.905     0.897     0.787   0.879    0.00     0.02     0.898      0.370
+    RBF SVM    hand           {'C': 10, 'g': 3}        0.903     0.890     0.775   0.858    0.12     0.22     0.901      0.361
+    RBF SVM    raw            {'C': 1, 'g': 0.3}       0.671     0.692     0.632   0.919    3.22     1.65     0.703      0.210
+    RBF SVM    PCA-B(16)      {'C': 10, 'g': 3}        0.859     0.850     0.738   0.919    0.21     0.31     0.851      0.299
+    RBF SVM    PCA-C(16)      {'C': 1, 'g': 3}         0.901     0.894     0.813   0.849    0.18     0.31     0.899      0.413
+    (realistic-prevalence variant: same 30 test images' conditions regenerated with 15% stars; 15.2% stars)
+
+  Part 3 - cumulative explained variance vs grouped-CV AUC (best classifier per k)
+        k  cum EV (B)  AUC PCA-B  cum EV (C)  AUC PCA-C
+        2       0.826      0.646       0.026      0.752
+        4       0.937      0.768       0.043      0.859
+        8       0.978      0.802       0.067      0.894
+       16       0.982      0.859       0.098      0.905
+       32       0.984      0.833       0.143      0.898
+       64       0.985      0.811       0.224      0.892
+      128       0.987      0.782       0.362      0.875
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_d_variance_vs_auc.png
+
+==============================================================================================================
+Experiment E: PCA vs LDA vs nonlinear embeddings
+
+  Part 1 - binary LDA on (log width, roundness, log SNR), 60 development images
+    class means: artifact [-0.028  0.401  2.097], star [-0.16   0.614  2.515]
+    S_W = [[1863.1, 368.2, 638.8], [368.2, 254.6, 318.5], [638.8, 318.5, 3332.6]]
+    S_B = (m1 - m0)(m1 - m0)^T, rank 1
+    w = S_W^-1 (m1 - m0) direction: [-0.2646  0.9627  0.0565]
+    vs sklearn LDA (eigen): |cos| = 1.0000000000; decision values max diff 2.46e-03; identical test predictions 0.9993
+    vs sklearn LDA (svd) transform(): correlation of the projections 1.0000000000
+    Fisher ratio J(w) = w^T S_B w / w^T S_W w relative to the LDA direction: LDA 1.000; best of 2000 random directions 0.992; first PCA direction 0.175
+    (decision values differ slightly from sklearn because the pooled covariance is divided by N - 2 here; the direction is identical)
+
+  Part 2 - same training groups (development) and test groups (untouched); test ROC AUC / accuracy
+    pixel within-class scatter S_W: 1024 x 1024, condition number 3.66e+04 (N = 2982 > D, so invertible but badly conditioned)
+    own shrinkage LDA, grouped-CV AUC by shrinkage: 0.0: 0.610, 0.01: 0.610, 0.1: 0.620, 0.3: 0.641, 0.6: 0.663, 0.9: 0.683, 0.97: 0.687, 0.99: 0.688, 1.0: 0.689
+    inputs       method                                                   test AUC  accuracy
+    3 features   logistic regression on all 3 features                       0.793     0.710
+    3 features   LDA: 1 discriminant axis, LDA threshold                     0.791     0.710
+    3 features   PCA 1 axis -> logistic                                      0.620     0.563
+    3 features   PCA 2 axis -> logistic                                      0.630     0.575
+    1024 pixels  logistic regression on pixels (C=1e-06 by grouped CV)       0.703     0.542
+    1024 pixels  LDA, own shrinkage 1.0 (grouped CV)                         0.703     0.651
+    1024 pixels  LDA, no shrinkage                                           0.631     0.589
+    1024 pixels  sklearn LDA, Ledoit-Wolf shrinkage                          0.692     0.652
+    1024 pixels  PCA 8 -> LDA (1 axis)                                       0.607     0.552
+    1024 pixels  PCA 8 -> logistic                                           0.675     0.630
+    1024 pixels  PCA 16 -> LDA (1 axis)                                      0.692     0.692
+    1024 pixels  PCA 16 -> logistic                                          0.759     0.692
+    1024 pixels  PCA 32 -> LDA (1 axis)                                      0.728     0.687
+    1024 pixels  PCA 32 -> logistic                                          0.782     0.718
+    1024 pixels  PCA 64 -> LDA (1 axis)                                      0.725     0.674
+    1024 pixels  PCA 64 -> logistic                                          0.778     0.702
+    1024 pixels  PCA 128 -> LDA (1 axis)                                     0.721     0.676
+    1024 pixels  PCA 128 -> logistic                                         0.776     0.694
+
+  Part 3 - t-SNE on a stratified subset (200 patches per subtype from the development images), PCA to 50 dimensions first
+    10-nearest-neighbour label agreement (subtype / class):
+      PCA-50 space:            0.612 / 0.788
+      t-SNE B, perplexity 5     0.648 / 0.790
+      t-SNE B, perplexity 30    0.654 / 0.796
+      t-SNE B, perplexity 100   0.643 / 0.787
+      t-SNE C, perplexity 30    0.556 / 0.802
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_e_projections.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-6\outputs\exp_e_tsne.png
+

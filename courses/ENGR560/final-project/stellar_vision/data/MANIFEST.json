@@ -1,0 +1,12 @@
+{
+  "camera_m13.json": "eb32af227355bac0bc431d6ac19e763c4e3251483c26a338d6b447915eb17f69",
+  "catalog_m13.csv": "5a68344b408f8045ec7d6bfb81050abdd34900cdc8a807ca1ad50b88caeffabd",
+  "catalog_m13.npz": "969a1e675dc5b045e3060e28f0909ae7f19914867472129fb90b61e7dbf071aa",
+  "cnn_best.pt": "915184664e69433fdc6f7ae9457774ee13e248efff130b4c9ae9daa50c6258c4",
+  "config_default.json": "c05d9a26ae3c25f092473a0356aabe3b9f5d0c5e8e836b1c66c545db2131cc6f",
+  "_sources": {
+    "cnn_best.pt": "module-12/outputs/cnn_best.pt (Experiment A checkpoint, threshold frozen on validation)",
+    "catalog_m13.npz": "module-13 sky13.make_catalog(seed=13): 180 stars, 7 deg around RA 150 Dec +20",
+    "camera_m13.json": "module-13 camera: 512 x 512, 30 arcsec/px, principal point (255.5, 255.5)"
+  }
+}

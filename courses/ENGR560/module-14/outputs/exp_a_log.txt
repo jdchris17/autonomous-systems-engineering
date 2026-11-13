@@ -1,0 +1,26 @@
+Experiment A: deterministic 5 x 5 grid world, Q-learning (alpha 0.1, gamma 0.95, epsilon 0.2 fixed)
+  layout (S start, G goal, # obstacle):
+    S . . . .
+    . # # # .
+    . # . . .
+    . # . # .
+    . . . # G
+
+  training (3000 episodes, exploration on), 100-episode moving averages:
+    episode   100: success 0.98  return  +7.34  length  17.7
+    episode   250: success 1.00  return  +8.84  length   9.9
+    episode   500: success 1.00  return  +8.76  length  10.3
+    episode  1000: success 1.00  return  +8.84  length   9.8
+    episode  2000: success 1.00  return  +8.83  length  10.5
+    episode  3000: success 1.00  return  +8.76  length  10.2
+  greedy policy first reaches the goal after 30 episodes; greedy path is the 8-move shortest path from episode 30 onwards (checked every 10 episodes)
+
+  frozen greedy policy, 100 evaluation episodes: success 1.00, mean return 9.30, steps to goal 8.0, collisions/episode 0.00
+  learned path: 8 moves  (0,0) (0,1) (0,2) (0,3) (0,4) (1,4) (2,4) (3,4) (4,4)
+  BFS shortest: 8 moves  (0,0) (0,1) (0,2) (0,3) (0,4) (1,4) (2,4) (3,4) (4,4)
+  optimal return along the shortest path: 9.30; learned 9.30
+
+  policy quality over all 17 reachable non-goal cells: 16 choose a shortest-path action, 1 do not: (3,0) ^
+    cell (3,0): BFS distance 9, greedy goes ^ (to distance 10); Q row +0.10 -0.25 -0.25 -0.45; optimal Q* row +5.18 +5.96 +5.56 +4.66
+  max |Q - Q*| on the shortest path's (state, action) pairs: 0.0000
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-14\outputs\exp_a_learning_curve.png and C:\Users\jakec\.claude\sessions\machine_learning\module-14\outputs\exp_a_policy.png

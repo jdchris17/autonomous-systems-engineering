@@ -1,0 +1,127 @@
+ENDURIA NAVIGATION ENGINE - PERFORMANCE QUALIFICATION (Work Package D)
+========================================================================
+Every number below is the output of solve_navigation_fix() on a simulated batch.
+Error magnitudes are illustrative assumptions; Phase 1 (6-10 NM = 11.1-18.5 km) and
+Phase 2 (100-200 m) are objectives, not device specifications.
+Base seed 5710. Accuracy statistics are over trials that produced a fix; availability is separate.
+
+1. REPRESENTATIVE SCENARIOS
+------------------------------------------------------------------------
+  A - Ideal reference: No noise or model error; random place and attitudes.
+  B - Phase 1 baseline: Illustrative phone-class errors, stationary, one attitude, ten exposures.
+  C - Calibrated stationary: Same hardware as B, twenty exposures at deliberately varied attitudes, calibration states estimated.
+  D - Precision hardware: Reduced noise and bias, measured weather, deflection model to 1 arcsec, varied attitudes.
+  E - Environmental stress: Precision hardware in a harsh, poorly known environment: -30 to +45 C, no weather data, pointing down to 65 deg zenith angle, thermal bias 5x, deflection model 3 arcsec, year-old Earth-orientation data.
+
+Scenario                        trials  fix prob   median      RMS     95th   reported  NEES  95% cov  VALID DEGR  UNOB  REJ
+A - Ideal reference                200    100.0% 0.042 um  0.05 um 0.085 um    763 mm  0.00   100.0%     0   200     0    0
+B - Phase 1 baseline              1000     99.9%  7.82 km  9.16 km  15.6 km   9.15 km  2.00    95.2%   768   231     0    1
+C - Calibrated stationary          500     99.8%    197 m    235 m    400 m     238 m  1.94    95.8%   350   149     0    1
+D - Precision hardware             500     99.8%     37 m     46 m     83 m      47 m  1.92    94.0%   469    30     0    1
+E - Environmental stress           500     95.0%    121 m    139 m    229 m     155 m  1.74    97.5%     0   475     0   25
+
+  um = micrometres. Scenario A is DEGRADED by design: its perfect measurements fit better than the
+  declared noise floor allows, and the engine reports that the stated uncertainties may be wrong.
+
+Against the objectives (fraction of fixes within the stated radius):
+Scenario                        within 10 NM  within 6 NM  within 200 m  within 100 m
+B - Phase 1 baseline                   98.6%        78.2%          0.1%          0.1%
+C - Calibrated stationary             100.0%       100.0%         50.9%         15.6%
+D - Precision hardware                100.0%       100.0%        100.0%         98.6%
+E - Environmental stress              100.0%       100.0%         88.4%         37.9%
+
+2. INTEGRITY RESPONSE (scenario F: phone-class hardware, one fault per trial, 60 trials each)
+------------------------------------------------------------------------
+Injected fault                                        VALID DEGR UNOB  REJ   fix error (median / max)   misleading
+healthy batch (control)                                  41   18    0    1          7.65 km / 20.7 km       0
+shaking during every exposure                             0    0    0   60                          -       0
+shaking during 3 of 10 exposures                          0   60    0    0          8.91 km / 19.5 km       0
+0.3 m/s^2 vertical acceleration                           0    0    0   60                          -       0
+steady 0.1 m/s^2 horizontal acceleration                 40   20    0    0          64.9 km / 79.5 km      60
+15 % of stars matched to the wrong catalog entry         42   17    0    1          6.75 km / 24.2 km       0
+40 % of stars matched to the wrong catalog entry          0   59    0    1          6.71 km / 19.8 km       0
+two matched stars per exposure                            0    0   60    0                          -       0
+all stars within 0.08 deg                                 0   60    0    0          8.94 km / 17.7 km       0
+no Earth-orientation data on the device                   0   60    0    0          8.99 km / 20.8 km       0
+NaN centroids in 2 of 10 exposures                        0   60    0    0          7.14 km / 21.4 km       0
+NaN accelerometer data in every exposure                  0    0    0   60                          -       0
+
+'misleading' counts fixes that were reported (VALID or DEGRADED) while the true error lay outside the
+99.99 % region of the reported covariance. With 60 trials per fault the expected count for an honest
+covariance is 0.006.
+
+3. PERFORMANCE ACROSS GEOGRAPHY AND OBSERVATION GEOMETRY
+------------------------------------------------------------------------
+Each configuration draws: a place anywhere within 85 deg of the equator, a date in 2024-2026,
+matched stars per exposure from [3, 4, 5, 6, 8, 10, 15, 20, 30, 40], a pointing limit of 25-65 deg from the zenith,
+pressure 1000 +/- 30 hPa, temperature -30 to +45 C (measured by the instrument), calibration
+quality [0.3, 1.0, 3.0] x nominal, Earth-orientation data age from [0, 30, 180, 365, 730] days,
+and an operational event with assumed probability none 84%, vibration_all 5%, vibration_some 5%, few_stars 6%.
+
+--- phone-class hardware, calibrated in the batch: 400 random configurations ---
+  Probability of obtaining a fix:  89.8%   (VALID 251, DEGRADED 108, UNOBSERVABLE 17, REJECTED 24)
+  Accuracy of a fix once obtained (percentiles of horizontal error):
+     10%: 76 m   50%: 210 m   68%: 269 m   90%: 374 m   95%: 431 m   99%: 580 m
+     best 5 m, worst 642 m, RMS 253 m; inside reported 95 % ellipse  94.2%; misleading 0
+  Fix probability by operational event: none 100.0% (344), vibration_all 0.0% (24), few_stars 0.0% (17), vibration_some 100.0% (15)
+  By latitude (configurations without an operational event):
+                         configs  fix prob   median     95th      max   95% cov
+  |lat| 0-30 deg             157    100.0%    210 m    433 m    642 m    93.0%
+  |lat| 30-60 deg            142    100.0%    219 m    442 m    580 m    94.4%
+  |lat| 60-85 deg             45    100.0%    204 m    344 m    430 m    97.8%
+  By how far from the zenith the sequence points:
+                         configs  fix prob   median     95th      max   95% cov
+  to 25-40 deg zenith        125    100.0%    221 m    441 m    552 m    92.8%
+  to 40-55 deg               128    100.0%    205 m    402 m    642 m    95.3%
+  to 55-65 deg                91    100.0%    196 m    422 m    490 m    94.5%
+  By matched stars per exposure:
+                         configs  fix prob   median     95th      max   95% cov
+  3-5 stars                   94    100.0%    219 m    445 m    616 m    92.6%
+  6-10 stars                  97    100.0%    201 m    432 m    580 m    94.8%
+  15-40 stars                153    100.0%    210 m    415 m    642 m    94.8%
+  By calibration quality (declared honestly in each case):
+                         configs  fix prob   median     95th      max   95% cov
+  alignment 0.3x sigma        99    100.0%    218 m    355 m    454 m    99.0%
+  alignment 1x               115    100.0%    218 m    488 m    642 m    87.8%
+  alignment 3x               130    100.0%    207 m    409 m    601 m    96.2%
+  By age of the Earth-orientation data:
+                         configs  fix prob   median     95th      max   95% cov
+  EOP current                 78    100.0%    227 m    417 m    580 m    94.9%
+  30-180 days old            136    100.0%    206 m    376 m    601 m    96.3%
+  1 year old                  62    100.0%    213 m    437 m    518 m    93.5%
+  2 years old                 68    100.0%    215 m    531 m    642 m    89.7%
+
+--- precision hardware: 400 random configurations ---
+  Probability of obtaining a fix:  89.0%   (VALID 318, DEGRADED 38, UNOBSERVABLE 21, REJECTED 23)
+  Accuracy of a fix once obtained (percentiles of horizontal error):
+     10%: 15 m   50%: 42 m   68%: 55 m   90%: 77 m   95%: 88 m   99%: 108 m
+     best 2 m, worst 118 m, RMS 50 m; inside reported 95 % ellipse  92.7%; misleading 0
+  Fix probability by operational event: none 99.4% (339), few_stars 0.0% (21), vibration_some 100.0% (19), vibration_all 0.0% (21)
+  By latitude (configurations without an operational event):
+                         configs  fix prob   median     95th      max   95% cov
+  |lat| 0-30 deg             188     98.9%     42 m     89 m    110 m    92.5%
+  |lat| 30-60 deg            112    100.0%     43 m     87 m    113 m    93.8%
+  |lat| 60-85 deg             39    100.0%     39 m     84 m     91 m    92.3%
+  By how far from the zenith the sequence points:
+                         configs  fix prob   median     95th      max   95% cov
+  to 25-40 deg zenith        136     98.5%     43 m     89 m    107 m    91.8%
+  to 40-55 deg               114    100.0%     42 m     86 m    113 m    93.9%
+  to 55-65 deg                89    100.0%     41 m     86 m     99 m    93.3%
+  By matched stars per exposure:
+                         configs  fix prob   median     95th      max   95% cov
+  3-5 stars                  108    100.0%     42 m     89 m    113 m    93.5%
+  6-10 stars                  88    100.0%     46 m     85 m    107 m    93.2%
+  15-40 stars                143     98.6%     42 m     87 m    106 m    92.2%
+  By calibration quality (declared honestly in each case):
+                         configs  fix prob   median     95th      max   95% cov
+  alignment 0.3x sigma       106    100.0%     45 m     89 m    113 m    90.6%
+  alignment 1x               104     99.0%     39 m     83 m    106 m    95.1%
+  alignment 3x               129     99.2%     44 m     88 m    107 m    93.0%
+  By age of the Earth-orientation data:
+                         configs  fix prob   median     95th      max   95% cov
+  EOP current                 68    100.0%     32 m     86 m    107 m    91.2%
+  30-180 days old            142    100.0%     43 m     89 m    113 m    91.5%
+  1 year old                  73     98.6%     46 m     84 m    110 m    94.4%
+  2 years old                 56     98.2%     44 m     80 m     97 m    96.4%
+
+Monte Carlo time for all stages: 14.5 minutes.

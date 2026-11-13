@@ -1,0 +1,35 @@
+Experiment C: stochastic transitions (0.8 intended / 0.1 / 0.1), gamma 0.95, 5 seeds, 2000 evaluation episodes
+  value iteration converged in 51 (original) / 59 (changed) sweeps; V*(start) = 4.944 / 2.787
+    VI policy, original:
+      > > > > v
+      ^ # # # v
+      ^ # > > v
+      v # ^ # v
+      > > ^ # G
+    VI policy, changed (0,3) blocked:
+      v < < # v
+      v # # # v
+      v # > > v
+      v # ^ # v
+      > > ^ # G
+  deterministic-world VI policy equals stochastic-world VI policy in 100% of cells
+
+  Part 1/2: original stochastic world (mean +- sd over 5 seeds)
+    policy                                              success    mean return   failure  steps to goal
+    deterministic agent, deterministic world       1.000+-0.000     9.30+-0.00     0.000        8.00
+    deterministic agent, STOCHASTIC world          1.000+-0.000     8.44+-0.03     0.000       10.46
+    stochastic-trained agent, stochastic world     1.000+-0.000     8.44+-0.03     0.000       10.46
+    value iteration, stochastic world              1.000+-0.000     8.44+-0.03     0.000       10.46
+    exact discounted value V(start): optimal 4.944; deterministic agent 4.944 (+-0.000); stochastic agent 4.944 (+-0.000)
+    cells where the Q-learning action is optimal under the true stochastic model: deterministic agent 87%, stochastic agent 93% of all 17; stochastic agent on the 9 cells the optimal policy actually visits: 100%
+
+  Part 3: route blocked at (0, 3) (stochastic world) - REQUIRED COMPARISON (mean +- sd over 5 seeds)
+    policy                            environment                      success     mean return       failure   steps
+    Original Q-learning               Original                    1.000+-0.000     8.44+-0.03  0.000+-0.000   10.46
+    Original Q-learning               Changed                     0.000+-0.000   -88.98+-0.03  1.000+-0.000     nan
+    Adapted Q-learning (+1000 ep)     Changed                     1.000+-0.000     7.19+-0.02  0.000+-0.000   15.77
+    Value iteration                   Changed, known dynamics     1.000+-0.000     7.19+-0.02  0.000+-0.000   15.77
+    adaptation: greedy success >= 0.95 after 50 episodes (median; range 40-80) of continued learning with epsilon 0.1
+    adapted policy: optimal action in 99% of cells; V(start) 2.787 vs optimal 2.787
+    same change in the DETERMINISTIC world (Experiment A agent): before adaptation success 0.00, after 1.00 (steps 12); value iteration 12 steps
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-14\outputs\exp_c_adaptation.png

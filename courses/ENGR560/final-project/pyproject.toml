@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stellar-vision"
+version = "1.0.0"
+description = "Astronomical perception pipeline: detection, CNN screening, PSF centroids, triangle identification, verified attitude"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.0", "scipy>=1.12", "astropy>=6.0"]
+
+[project.optional-dependencies]
+hybrid = ["torch>=2.2"]          # only needed for detection_mode="hybrid"
+test = ["pytest>=8", "matplotlib>=3.8"]
+
+[tool.setuptools]
+packages = ["stellar_vision"]
+
+[tool.setuptools.package-data]
+stellar_vision = ["data/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

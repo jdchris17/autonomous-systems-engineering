@@ -1,0 +1,18 @@
+Experiment B: star identification without associations (6 fields per condition)
+  approximate focal length 6944.2 px (true 6875.5, +1.0 %); boresight search radius 2.5 deg
+  catalogue subset 124 stars, 115773 catalogue triangles (built in 0.28 s)
+
+    condition                        solved correct ID wrong matches verify  med px  p90 px  att med  att max   f err s/field
+    nominal (roll 0, sigma 0.1 px)     6/6       1.000     0    21.8   18.8   0.108   0.197     4.0"    25.0" 1.4e-04    0.15
+    unknown image rotation             6/6       1.000     0    22.8   19.8   0.123   0.208    10.6"    18.0" 1.1e-04    0.15
+    20% missing stars                  6/6       1.000     0    17.8   14.8   0.119   0.197    14.4"    38.7" 1.1e-04    0.14
+    20% false detections               6/6       1.000     0    22.8   19.8   0.123   0.208    10.6"    18.0" 1.1e-04    0.16
+    increased noise 1 px               6/6       1.000     0    22.8   19.8   1.229   2.077   106.5"   179.5" 1.1e-03    1.73
+    increased noise 3 px               6/6       1.000     0    22.8   19.8   3.686   6.232   320.8"   537.7" 3.2e-03    4.66
+    missing + false + 1 px             6/6       1.000     0    17.8   14.8   1.189   1.965   144.1"   386.8" 1.1e-03    1.70
+
+  controls (must be rejected):
+    random points                    false solutions accepted: 0/6;  best hypothesis extra/total matches per field: 1/4, 0/1, 2/5, 1/4, 2/5, 1/4  (acceptance needs >= 6 extra and >= 50%)
+    wrong sky (other catalogue)      false solutions accepted: 0/6;  best hypothesis extra/total matches per field: 1/4, 2/5, 2/5, 1/4, 2/5, 1/4  (acceptance needs >= 6 extra and >= 50%)
+    random points, 3 px tolerance    false solutions accepted: 0/6;  best hypothesis extra/total matches per field: 5/8, 8/9, 5/8, 6/8, 6/8, 7/9  (acceptance needs >= 6 extra and >= 50%)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-13\outputs\exp_b_matches.png

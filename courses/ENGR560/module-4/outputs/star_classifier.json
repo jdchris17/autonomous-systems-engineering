@@ -1,0 +1,175 @@
+{
+  "selected_model": "KNN [invariant 3]",
+  "hyperparameters": "k=51",
+  "features": [
+    "log width",
+    "roundness",
+    "log SNR"
+  ],
+  "standardizer_mean": [
+    0.23931859776127629,
+    0.7172400503787421,
+    2.4386077002063327
+  ],
+  "standardizer_std": [
+    0.5678634809405642,
+    0.28922756335176825,
+    1.0660156501977789
+  ],
+  "calibration": "Platt scaling on the validation split",
+  "training_prior": 0.4,
+  "thresholds": {
+    "A": 0.15,
+    "B": 0.8
+  },
+  "policies": {
+    "A": "high recall: val recall >= 0.95",
+    "B": "high precision: val precision >= 0.9"
+  },
+  "selection_rule": "min 0.5*nominal + 0.5*mean feature-shift log loss on unseen selection sets; nominal ECE <= 0.05; cost <= 1000.0 ms/1000; within 1% prefer cheaper",
+  "selection_table": {
+    "perceptron [all 5]": {
+      "nominal_auc": 0.67693831293371,
+      "nominal_logloss": 0.6292524419670684,
+      "nominal_ece": 0.0499099629934233,
+      "shift_logloss_mean": 0.6565173894467156,
+      "shift_auc_mean": 0.7032930729188811,
+      "shift_auc_worst": 0.54343275312803,
+      "robust_logloss": 0.642884915706892,
+      "cost_ms_per_1000": 0.04246666988668342
+    },
+    "logistic [all 5]": {
+      "nominal_auc": 0.7518657228208436,
+      "nominal_logloss": 0.5726028100377408,
+      "nominal_ece": 0.041917604439873246,
+      "shift_logloss_mean": 0.5889657347276016,
+      "shift_auc_mean": 0.7388017451462944,
+      "shift_auc_worst": 0.6155145666928298,
+      "robust_logloss": 0.5807842723826713,
+      "cost_ms_per_1000": 0.04616666895647844
+    },
+    "linear SVM [all 5]": {
+      "nominal_auc": 0.7475621578268299,
+      "nominal_logloss": 0.5777763346187167,
+      "nominal_ece": 0.05226275239019457,
+      "shift_logloss_mean": 0.5993682937941847,
+      "shift_auc_mean": 0.7324231044875628,
+      "shift_auc_worst": 0.6163331640426613,
+      "robust_logloss": 0.5885723142064507,
+      "cost_ms_per_1000": 34.92999999434687
+    },
+    "RBF SVM [all 5]": {
+      "nominal_auc": 0.8740928270042194,
+      "nominal_logloss": 0.43138133376456667,
+      "nominal_ece": 0.02158697541295243,
+      "shift_logloss_mean": 0.5507037276843425,
+      "shift_auc_mean": 0.794864094538575,
+      "shift_auc_worst": 0.6340158825430537,
+      "robust_logloss": 0.4910425307244546,
+      "cost_ms_per_1000": 301.8368999958815
+    },
+    "KNN [all 5]": {
+      "nominal_auc": 0.882256395950297,
+      "nominal_logloss": 0.4185120152206426,
+      "nominal_ece": 0.02141089131340899,
+      "shift_logloss_mean": 0.48725100090387646,
+      "shift_auc_mean": 0.8456508720453619,
+      "shift_auc_worst": 0.8020054847237622,
+      "robust_logloss": 0.4528815080622595,
+      "cost_ms_per_1000": 89.81363333684082
+    },
+    "tree [all 5]": {
+      "nominal_auc": 0.8730315816391766,
+      "nominal_logloss": 0.44682332494127414,
+      "nominal_ece": 0.02943418419443651,
+      "shift_logloss_mean": 0.4832546179150631,
+      "shift_auc_mean": 0.8445457054969774,
+      "shift_auc_worst": 0.7836227587441034,
+      "robust_logloss": 0.46503897142816863,
+      "cost_ms_per_1000": 0.1261333333483587
+    },
+    "perceptron [invariant 3]": {
+      "nominal_auc": 0.6946965628668735,
+      "nominal_logloss": 0.6211250698213038,
+      "nominal_ece": 0.08016826287665171,
+      "shift_logloss_mean": 0.623778397463966,
+      "shift_auc_mean": 0.6795697103336178,
+      "shift_auc_worst": 0.5805434230573895,
+      "robust_logloss": 0.622451733642635,
+      "cost_ms_per_1000": 0.04196666607943674
+    },
+    "logistic [invariant 3]": {
+      "nominal_auc": 0.7500356848112889,
+      "nominal_logloss": 0.5732454683239698,
+      "nominal_ece": 0.04063360036163065,
+      "shift_logloss_mean": 0.5865094519033469,
+      "shift_auc_mean": 0.738305937289511,
+      "shift_auc_worst": 0.6140675931483448,
+      "robust_logloss": 0.5798774601136584,
+      "cost_ms_per_1000": 0.04413332984161874
+    },
+    "linear SVM [invariant 3]": {
+      "nominal_auc": 0.746419778916902,
+      "nominal_logloss": 0.5749566399701741,
+      "nominal_ece": 0.03341612268276705,
+      "shift_logloss_mean": 0.5849650214161033,
+      "shift_auc_mean": 0.7382947220739106,
+      "shift_auc_worst": 0.6108430675469781,
+      "robust_logloss": 0.5799608306931388,
+      "cost_ms_per_1000": 37.4583333323244
+    },
+    "RBF SVM [invariant 3]": {
+      "nominal_auc": 0.8869528425800002,
+      "nominal_logloss": 0.41784567816867485,
+      "nominal_ece": 0.02972367206787322,
+      "shift_logloss_mean": 0.4752259988765594,
+      "shift_auc_mean": 0.8539109867839277,
+      "shift_auc_worst": 0.7872252795401171,
+      "robust_logloss": 0.44653583852261713,
+      "cost_ms_per_1000": 251.78693332903396
+    },
+    "KNN [invariant 3]": {
+      "nominal_auc": 0.8919647568899582,
+      "nominal_logloss": 0.39750228423074396,
+      "nominal_ece": 0.0157664876204763,
+      "shift_logloss_mean": 0.45078887796935624,
+      "shift_auc_mean": 0.8633684570570548,
+      "shift_auc_worst": 0.8120089253594219,
+      "robust_logloss": 0.4241455811000501,
+      "cost_ms_per_1000": 89.41023334045894
+    },
+    "tree [invariant 3]": {
+      "nominal_auc": 0.8750150527135567,
+      "nominal_logloss": 0.43721719567778156,
+      "nominal_ece": 0.029240845010924044,
+      "shift_logloss_mean": 0.47499584587143745,
+      "shift_auc_mean": 0.8463253583230012,
+      "shift_auc_worst": 0.7833102881463183,
+      "robust_logloss": 0.4561065207746095,
+      "cost_ms_per_1000": 0.12620000052265823
+    }
+  },
+  "eligible": [
+    "perceptron [all 5]",
+    "logistic [all 5]",
+    "RBF SVM [all 5]",
+    "KNN [all 5]",
+    "tree [all 5]",
+    "logistic [invariant 3]",
+    "linear SVM [invariant 3]",
+    "RBF SVM [invariant 3]",
+    "KNN [invariant 3]",
+    "tree [invariant 3]"
+  ],
+  "seeds": {
+    "splits": {
+      "train": 401,
+      "val": 402,
+      "test": 403
+    },
+    "shift": {
+      "selection": 610,
+      "final test": 620
+    }
+  }
+}

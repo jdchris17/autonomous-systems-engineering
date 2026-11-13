@@ -1,0 +1,88 @@
+==============================================================================================================
+Experiment A: weighted-SVD attitude with correct associations
+  catalogue 180 stars, patch radius 7.0 deg; camera 512 x 512, 30.0 arcsec/px (f = 6875.5 px), field 4.26 deg; 1000 random attitudes per point
+    star 001  RA 150.7264  Dec +23.4742  s = (-0.8001, +0.4485, +0.3983)  mag 3.07
+    star 002  RA 151.4279  Dec +18.3664  s = (-0.8335, +0.4539, +0.3151)  mag 3.17
+    star 003  RA 155.5721  Dec +22.7952  s = (-0.8394, +0.3812, +0.3874)  mag 3.85
+    ...
+  visible stars per field: median 24 (range 16-33)
+
+  median attitude error (arcsec) vs centroid noise sigma (px)
+     sigma     homo  homo pred   het unw   het wtd  het pred  p90 het w
+     0.050     6.94       6.90     10.54      7.98      8.89      21.73
+     0.075    10.48      11.33     16.40     14.00     12.92      32.51
+     0.100    14.27      14.39     20.97     18.22     17.01      44.25
+     0.150    21.90      21.63     29.08     24.62     26.16      62.08
+     0.200    29.35      27.56     40.98     34.65     38.18      85.99
+     0.300    40.94      43.85     65.57     48.95     53.97     127.92
+     0.500    71.84      69.47    103.64     85.41     84.93     214.89
+  log-log slope of error vs sigma (homoscedastic): 1.008  (1 = linear, as small-error theory predicts)
+  homoscedastic: max |weighted - unweighted| = 6.93e-02 arcsec (weights nearly equal; only the cos^1.5 factor differs)
+
+  compact weighted vs unweighted comparison at sigma = 0.1 px (arcsec; components in the camera frame)
+    case                                median     p90  cross-bore    roll  predicted
+    homoscedastic (uniform = weighted)   14.27   34.60        0.74   14.24      14.39
+    hetero 0.05-0.2 px, unweighted       20.97   53.03        1.15   20.92      17.01
+    hetero 0.05-0.2 px, weighted         18.22   44.25        0.92   18.20      17.01
+    hetero 0.025-0.4 px, unweighted      36.18   84.57        1.85   36.15      19.69
+    hetero 0.025-0.4 px, weighted        17.85   44.31        0.84   17.83      19.69
+    weighting gain 0.05-0.2 px: median error x1.15 smaller; weighted better in 61% of trials
+    weighting gain 0.025-0.4 px: median error x2.03 smaller; weighted better in 73% of trials
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-13\outputs\exp_a_attitude_error.png
+
+==============================================================================================================
+Experiment B: star identification without associations (6 fields per condition)
+  approximate focal length 6944.2 px (true 6875.5, +1.0 %); boresight search radius 2.5 deg
+  catalogue subset 124 stars, 115773 catalogue triangles (built in 0.28 s)
+
+    condition                        solved correct ID wrong matches verify  med px  p90 px  att med  att max   f err s/field
+    nominal (roll 0, sigma 0.1 px)     6/6       1.000     0    21.8   18.8   0.108   0.197     4.0"    25.0" 1.4e-04    0.15
+    unknown image rotation             6/6       1.000     0    22.8   19.8   0.123   0.208    10.6"    18.0" 1.1e-04    0.15
+    20% missing stars                  6/6       1.000     0    17.8   14.8   0.119   0.197    14.4"    38.7" 1.1e-04    0.14
+    20% false detections               6/6       1.000     0    22.8   19.8   0.123   0.208    10.6"    18.0" 1.1e-04    0.13
+    increased noise 1 px               6/6       1.000     0    22.8   19.8   1.229   2.077   106.5"   179.5" 1.1e-03    1.70
+    increased noise 3 px               6/6       1.000     0    22.8   19.8   3.686   6.232   320.8"   537.7" 3.2e-03    4.70
+    missing + false + 1 px             6/6       1.000     0    17.8   14.8   1.189   1.965   144.1"   386.8" 1.1e-03    1.72
+
+  controls (must be rejected):
+    random points                    false solutions accepted: 0/6;  best hypothesis extra/total matches per field: 1/4, 0/1, 2/5, 1/4, 2/5, 1/4  (acceptance needs >= 6 extra and >= 50%)
+    wrong sky (other catalogue)      false solutions accepted: 0/6;  best hypothesis extra/total matches per field: 1/4, 2/5, 2/5, 1/4, 2/5, 1/4  (acceptance needs >= 6 extra and >= 50%)
+    random points, 3 px tolerance    false solutions accepted: 0/6;  best hypothesis extra/total matches per field: 5/8, 8/9, 5/8, 6/8, 6/8, 7/9  (acceptance needs >= 6 extra and >= 50%)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-13\outputs\exp_b_matches.png
+
+==============================================================================================================
+Experiment C: Module 12 detector -> astrometric solve; our solver vs Astrometry.net 0.98 (WSL)
+  pixel-convention test (exact projected positions, zero-based):
+    written with +1.0 (1-based): WCS-predicted - true position mean (+0.0000, -0.0000) px, rms 0.0000 px
+    written as-is (0-based)   : WCS-predicted - true position mean (-1.0000, -1.0000) px, rms 1.4142 px
+
+  per field (source lists: n = catalogue stars / uncatalogued field stars / artifacts):
+    seed list                                  n  ours match  ok bad   att"   t s  a.net match   att" log-odds   t s
+    200  hybrid (CNN)                    23/31/0   yes    23  23   0    4.6  0.15    yes    23   30.3  87.5098  1.39
+    200  raw candidates (no CNN)        23/37/14   yes    24  23   1    4.6  0.14    yes    23   30.3  81.4333  1.37
+    201  hybrid (CNN)                    19/35/0   yes    19  19   0    5.3  0.16    yes    19    1.0  82.5658  1.30
+    201  raw candidates (no CNN)        19/35/26   yes    19  19   0    5.3  0.12    yes    19    1.0  74.0229  1.36
+    202  hybrid (CNN)                    18/35/0   yes    18  18   0    1.7  0.14    yes    18   28.3   77.259  1.27
+    202  raw candidates (no CNN)        19/37/22   yes    19  19   0    1.6  0.14    yes    19   61.8  58.5389  1.25
+    203  hybrid (CNN)                    22/33/1   yes    22  22   0    0.8  0.15    yes    22   21.7  78.9876  1.37
+    203  raw candidates (no CNN)        22/36/26   yes    22  22   0    0.8  0.12    yes    22   21.7  88.9778  1.32
+    204  hybrid (CNN)                    28/37/0   yes    28  28   0    4.4  0.16    yes    28    7.9  119.866  1.26
+    204  raw candidates (no CNN)        28/39/15   yes    28  28   0    4.4  0.15    yes    28    7.9  112.637  1.23
+    205  hybrid (CNN)                    23/32/0   yes    23  23   0    7.4  0.16    yes    23   21.5  69.1455  1.34
+    205  raw candidates (no CNN)        23/35/24   yes    23  23   0    7.4  0.14    yes    23   21.5   61.954  1.29
+
+  summary over the 6 fields (residuals: TRUE correspondences, identical star set for both solvers)
+    list                     solver           solved verified wrong IDs reproj RMS px median px  p90 px att med" att max"  time s
+    hybrid (CNN)             ours               6/6      22.2         0         0.100     0.060   0.167      4.5      7.4    0.15
+    hybrid (CNN)             Astrometry.net     6/6      22.2       n/a         0.082     0.058   0.129     21.6     30.3    1.32
+    hybrid (CNN)             A.net tweak 1      6/6      22.2       n/a         0.092     0.062   0.159     11.9     18.4    1.23
+    raw candidates (no CNN)  ours               6/6      22.5         1         0.118     0.060   0.167      4.5      7.4    0.14
+    raw candidates (no CNN)  Astrometry.net     6/6      22.3       n/a         0.099     0.060   0.141     21.6     61.8    1.30
+    our wrong associations by true type: catalogue-other 0, uncatalogued field star 0, artifact 1
+    Astrometry.net self-reported match RMS (its .corr file): 0.089 px; WSL process start-up alone costs 5.03 s of its wall-clock time
+
+  false-solution tests (must NOT solve):
+    random points                  ours accepted 0/3, Astrometry.net accepted 0/3
+    wrong sky (other catalogue)    ours accepted 0/3, Astrometry.net accepted 0/3
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-13\outputs\exp_c_solutions.png
+

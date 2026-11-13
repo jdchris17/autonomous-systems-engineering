@@ -1,0 +1,12 @@
+Threshold calibration: correct solutions on calibration seeds 300-311 (permissive acceptance)
+  condition               mode       solved chi2 med chi2 max rms max roll sd max cross sd max z^2 mean
+  nominal                 classical   12/12     0.83     1.10   0.329        10.0         0.32     3.21
+  nominal                 hybrid      12/12     0.80     1.10   0.115        12.1         0.37     2.59
+  low SNR                 classical   12/12     1.06     1.61   0.461        61.6         1.95     3.01
+  low SNR                 hybrid      10/12     1.02     1.61   0.410        63.2         1.57     3.12
+  strong defocus          classical   12/12     0.90     1.61   0.531        39.4         1.37     3.09
+  strong defocus          hybrid      12/12     0.91     1.36   0.461        52.1         1.62     2.26
+  hot pixels & streaks    classical   12/12     0.80     1.07   0.279        10.3         0.33     2.76
+  hot pixels & streaks    hybrid      12/12     0.83     1.12   0.112        12.5         0.38     2.96
+  maxima over all conditions: {'chi2': np.float64(1.613), 'rms': np.float64(0.531), 'roll': np.float64(63.227), 'cross': np.float64(1.946)}
+  (z^2 = phi^T P^-1 phi for the true attitude error; ~3 if the reported covariance is calibrated)

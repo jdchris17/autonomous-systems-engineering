@@ -1,0 +1,385 @@
+==============================================================================================================
+Experiment A: 20000 detected candidates, star fraction 0.401, detection threshold SNR >= 3.0
+  median [10th - 90th percentile] of each measured feature by subtype:
+    subtype                n          peak_intensity                   width               roundness              background                     snr
+    bright star         1456   365.48 [196.96-1768.68]        1.23 [1.05-1.45]        0.95 [0.79-1.00]    95.80 [61.39-150.81]    49.51 [23.04-308.96]
+    faint star          6557   132.62 [86.95-201.73]        1.33 [0.97-2.31]        0.96 [0.54-1.00]    97.77 [62.32-153.46]       6.38 [3.52-14.19]
+    hot pixel           2439   435.51 [162.10-1647.99]        0.60 [0.45-0.75]        0.93 [0.71-1.00]    99.03 [63.55-153.20]     30.11 [6.44-145.71]
+    diffuse             2399   125.25 [80.72-188.74]        3.31 [2.08-5.43]        0.68 [0.31-1.00]   100.45 [63.37-158.96]      11.50 [4.80-25.55]
+    noise peak          4723   135.26 [90.21-205.71]        1.18 [0.70-2.03]        0.61 [0.15-1.00]   100.01 [64.01-158.19]        5.89 [3.64-9.87]
+    compact irregular   2426   245.53 [125.30-618.40]        0.96 [0.67-1.35]        0.35 [0.05-0.65]    99.68 [63.21-153.28]      19.90 [5.49-77.11]
+
+  Best single-feature threshold accuracy (majority-class rate = 0.599):
+    log peak        0.604
+    log width       0.630
+    roundness       0.687
+    log background  0.599
+    log SNR         0.608
+
+  Where the populations overlap:
+    faint stars with SNR < 6: 46%; noise peaks with SNR < 6: 52%
+    width in the stellar band 0.9-1.8 px: stars 79%, noise peaks 58%, compact irregular 59%, hot pixels 2%, diffuse 5%
+    roundness > 0.8: stars 73%, hot pixels 79%, noise peaks 31%, faint stars 69%, bright stars 89%
+    measured SNR > 20: bright stars 96% (subtype defined on TRUE SNR >= 20), faint stars 2%, hot pixels 61%; compact irregular 50%
+
+  Strongest correlations (all candidates, engineered features):
+    log peak ~ log SNR: +0.84
+    log peak ~ log width: -0.40
+    log peak ~ log background: +0.34
+    log width ~ log SNR: -0.13
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_a_histograms.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_a_correlation.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_a_scatter.png
+
+==============================================================================================================
+Experiment B: perceptron and logistic regression (features standardized on train)
+
+  Part 1 - perceptron (lr = 1, shuffled each epoch, up to 50 epochs)
+    2 features, stars vs hot pixels    epochs 50, mistakes first/last epoch   98/  97 (of 2101), train acc 0.968, test acc 0.957
+      final weights [b, w...] = [ 5.    5.07 -0.15]
+    2 features, all candidates         epochs 50, mistakes first/last epoch 1517/1526 (of 4000), train acc 0.556, test acc 0.556
+      final weights [b, w...] = [-2.    1.31  0.81]
+    5 features, all candidates         epochs 50, mistakes first/last epoch 1481/1551 (of 4000), train acc 0.633, test acc 0.614
+      final weights [b, w...] = [-1.   -3.21  2.58  2.61 -1.55 -1.31]
+
+  Part 2 - logistic regression from scratch (lam = 0.001, step 1/L, ||grad|| <= 1e-7)
+    2 features: converged after 29 updates (step 3.761), final loss 0.57315, train acc 0.709, test acc 0.720
+      theta [b, w...] = [-0.5571  0.3455  1.0744]
+    5 features: converged after 472 updates (step 1.942), final loss 0.56706, train acc 0.696, test acc 0.705
+      theta [b, w...] = [-0.561  -0.1466  0.2694  1.1053  0.0208 -0.1251]
+      5-feature weights by feature: log peak -0.15, log width +0.27, roundness +1.11, log background +0.02, log SNR -0.13
+
+  Part 3 - gradient check (relative discrepancy E, 5-feature loss incl. L2 term)
+    theta              h=0.01   h=0.0001    h=1e-06    h=1e-08
+    zeros             1.3e-14    1.1e-12    1.5e-10    1.1e-08
+    trained           3.4e-06    3.4e-10    5.9e-11    7.1e-09
+    random            2.2e-06    2.2e-10    1.3e-10    9.4e-09
+    large random      3.4e-08    1.1e-11    5.9e-10    9.9e-08
+
+    scikit-learn LogisticRegression(C = 1/(n lam) = 0.250, lbfgs, tol 1e-10)
+      theta (sklearn) = [-0.561  -0.1466  0.2694  1.1053  0.0208 -0.1251]
+      |theta_mine - theta_sklearn| = 1.19e-05, max |p_mine - p_sklearn| on test = 3.26e-06, identical test predictions: 1.0000
+      training objective: mine 0.5670596424, sklearn 0.5670596424
+
+  Test-set confusion matrices [[TN, FP], [FN, TP]] (5 features, threshold 0.5 / sign):
+    perceptron [[1406, 985], [558, 1051]]  accuracy 0.614, precision 0.516, recall 0.653
+    logistic   [[1796, 595], [585, 1024]]  accuracy 0.705, precision 0.632, recall 0.636
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_b_learning_curves.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_b_boundaries_2d.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_b_confusion.png
+
+==============================================================================================================
+Experiment C: support vector machines (standardized engineered features)
+
+  Part 1 - 2 features (log width, roundness), linear SVM C = 1
+    w = [0.408 1.254], b = -0.370, margin width 2/||w|| = 1.516 (standardized units)
+    support vectors: 2782 of 4000 (70%); bound (alpha = C, inside margin or misclassified): 2779
+    test accuracy: SVM 0.693, logistic 0.720; angle between the two boundaries 0.2 deg
+
+  Part 2 - soft margin, linear SVM
+          C | 2D train 2D test   #SV  margin | 5D train 5D test   #SV  margin  fit s
+      0.001 |    0.595   0.596  3209    5.03 |    0.620   0.621  3212    4.15    0.2
+       0.01 |    0.685   0.689  2928    1.68 |    0.694   0.696  2853    1.70    0.2
+        0.1 |    0.689   0.693  2797    1.53 |    0.696   0.701  2724    1.42    0.2
+          1 |    0.689   0.693  2782    1.52 |    0.696   0.699  2707    1.37    0.3
+         10 |    0.689   0.693  2780    1.51 |    0.697   0.699  2703    1.36    0.8
+        100 |    0.689   0.693  2780    1.51 |    0.697   0.699  2703    1.36    3.2
+
+  Part 3 - RBF kernel: 5 features, validation accuracy [train accuracy] (#SV)
+    gamma ->                  0.03                   0.3                     3                    30
+    C=0.1     0.759 [0.776] (2808)  0.799 [0.818] (2121)  0.772 [0.790] (3058)  0.614 [0.599] (3995)
+    C=1       0.791 [0.808] (2138)  0.806 [0.825] (1768)  0.800 [0.862] (2471)  0.714 [0.986] (3947)
+    C=10      0.794 [0.817] (1853)  0.809 [0.830] (1664)  0.773 [0.916] (2186)  0.726 [0.999] (3882)
+    C=100     0.795 [0.817] (1734)  0.801 [0.836] (1633)  0.749 [0.960] (1982)  0.728 [1.000] (3870)
+    selected on validation: C = 10, gamma = 0.3  ->  test accuracy 0.820, #SV 1664
+
+  Is the nonlinearity genuine? (5 features, test accuracy)
+    linear SVM (C=1)                           0.699
+    logistic, linear features                  0.705
+    logistic, + all squares and products (20)  0.808
+    RBF SVM (validated)                        0.820   train 0.830
+    RBF SVM C=100, gamma=30 (overfit check)    val 0.728   train 1.000
+
+  Support vectors vs training-set size (5 features)
+     n_train    linear C=1    RBF selected    RBF C=100,g=30
+         500     348 (70%)       235 (47%)        500 (100%)
+        1000     688 (69%)       449 (45%)        998 (100%)
+        2000    1370 (68%)       831 (42%)        1982 (99%)
+        4000    2707 (68%)      1664 (42%)        3870 (97%)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_c_linear_margin.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_c_soft_margin.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_c_rbf_grid.png
+
+==============================================================================================================
+Experiment D: nearest neighbours, decision trees, model comparison
+
+  Part 1 - KNN (own NumPy implementation vs scikit-learn, standardized engineered features)
+      k  train acc  val acc  agree w/ sklearn   own s   sk s
+      1      1.000    0.745            1.0000    0.17   0.07
+      3      0.879    0.773            1.0000    0.18   0.02
+      5      0.851    0.789            1.0000    0.16   0.02
+     11      0.835    0.800            1.0000    0.16   0.03
+     21      0.833    0.806            1.0000    0.15   0.03
+    (k = 1 training accuracy is 1 by construction: each point is its own neighbour)
+
+    Feature scaling, validation accuracy:
+      inputs                                     k=1     k=3     k=5    k=11    k=21
+      raw measured features (no scaling)       0.645   0.644   0.670   0.656   0.663
+      raw measured, standardized               0.732   0.774   0.785   0.796   0.796
+      engineered (logs), no scaling            0.730   0.759   0.786   0.796   0.802
+      engineered, standardized                 0.745   0.773   0.789   0.800   0.806
+      raw feature standard deviations: peak_intensity 1671.80, width 1.08, roundness 0.29, background 36.68, snr 266.73
+
+  Part 2 - decision trees
+     max_depth  leaves  train acc  val acc
+             2       4      0.780    0.774
+             4      16      0.819    0.795
+             8     137      0.866    0.783
+            16     503      0.972    0.751
+          None     622      1.000    0.738
+    depth-4 feature importances: log width 0.46, roundness 0.44, log SNR 0.10, log peak 0.00, log background 0.00
+    depth-3 tree on UNSTANDARDIZED engineered features (readable thresholds):
+      |--- log width <= -0.12
+      |   |--- log SNR <= 1.42
+      |   |   |--- roundness <= 0.85
+      |   |   |   |--- class: 0
+      |   |   |--- roundness >  0.85
+      |   |   |   |--- class: 1
+      |   |--- log SNR >  1.42
+      |   |   |--- log width <= -0.27
+      |   |   |   |--- class: 0
+      |   |   |--- log width >  -0.27
+      |   |   |   |--- class: 0
+      |--- log width >  -0.12
+      |   |--- roundness <= 0.71
+      |   |   |--- roundness <= 0.45
+      |   |   |   |--- class: 0
+      |   |   |--- roundness >  0.45
+      |   |   |   |--- class: 0
+      |   |--- roundness >  0.71
+      |   |   |--- log width <= 0.78
+      |   |   |   |--- class: 1
+      |   |   |--- log width >  0.78
+      |   |   |   |--- class: 0
+
+  Part 3 - all classifiers on the same held-out test set
+    selected hyperparameters (validation): perceptron: 50 epochs; logistic: lam=0.0001; linear SVM: C=1; RBF SVM: C=1, gamma=1; KNN: k=21; tree: max_depth=6
+    model           acc  bal acc   prec  recall     F1    AUC  logloss  Brier   fit s  ms/1k pred
+    perceptron    0.614    0.621  0.516   0.653  0.577  0.652    0.643  0.226    0.49        0.04
+    logistic      0.705    0.694  0.632   0.637  0.634  0.754    0.572  0.195    0.26        0.04
+    linear SVM    0.700    0.702  0.607   0.715  0.657  0.753    0.576  0.196    0.33       35.90
+    RBF SVM       0.817    0.818  0.748   0.822  0.783  0.880    0.425  0.135    0.24      310.85
+    KNN           0.811    0.812  0.740   0.817  0.777  0.890    0.405  0.132    0.00       80.17
+    tree          0.802    0.804  0.729   0.809  0.767  0.879    0.432  0.137    0.01        0.12
+    (log loss and Brier use Platt-calibrated probabilities fitted on validation; accuracy etc. use each model's own decision rule)
+    always-artifact baseline accuracy: 0.598
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_d_shallow_tree.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_d_knn_tree_curves.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_d_roc_comparison.png
+
+==============================================================================================================
+Experiment E: thresholds, imbalance, calibration
+    selected hyperparameters (validation): perceptron: 50 epochs; logistic: lam=0.0001; linear SVM: C=1; RBF SVM: C=1, gamma=1; KNN: k=21; tree: max_depth=6
+
+  Logistic regression threshold sweep on TEST (n = 4000, 1609 stars)
+      thr  precision  recall    FPR     F1  accepted
+      0.1      0.448   0.978  0.811  0.614      3513
+      0.2      0.487   0.942  0.669  0.642      3115
+      0.3      0.536   0.884  0.515  0.667      2654
+      0.4      0.583   0.779  0.376  0.666      2151
+      0.5      0.632   0.637  0.250  0.634      1622
+      0.6      0.658   0.430  0.150  0.520      1051
+      0.7      0.562   0.093  0.049  0.160       267
+      0.8      0.333   0.001  0.002  0.002         6
+      0.9        nan   0.000  0.000  0.000         0
+  Confusion matrices [[TN, FP], [FN, TP]]:
+    threshold 0.2: [[792, 1599], [93, 1516]]
+    threshold 0.5: [[1794, 597], [584, 1025]]
+    threshold 0.8: [[2387, 4], [1607, 2]]
+
+  Operational policies (thresholds chosen on VALIDATION, evaluated once on TEST)
+    Policy A - high recall:    largest threshold with val recall >= 0.95
+    Policy B - high precision: smallest threshold with val precision >= 0.9 (if no threshold reaches it: the threshold with the best val precision, >= 50 accepted)
+
+    logistic: Policy A threshold 0.20, Policy B threshold 0.62  (target unreachable: best val precision 0.670)
+      policy           thr  precision  recall    FPR  accepted  stars lost  artifacts passed
+      A val           0.20      0.480   0.951  0.647      1529          38               795
+      A test          0.20      0.487   0.942  0.669      3115          93              1599
+      B val           0.62      0.670   0.404  0.125       466         460               154
+      B test          0.62      0.660   0.371  0.128       904        1012               307
+      p >= 0.5 val    0.50      0.616   0.641  0.251       803         277               308
+      p >= 0.5 test   0.50      0.632   0.637  0.250      1622         584               597
+
+    RBF SVM: Policy A threshold 0.11, Policy B threshold 0.83
+      policy           thr  precision  recall    FPR  accepted  stars lost  artifacts passed
+      A val           0.11      0.551   0.953  0.489      1336          36               600
+      A test          0.11      0.560   0.950  0.502      2729          80              1200
+      B val           0.83      0.935   0.149  0.007       123         657                 8
+      B test          0.83      0.964   0.167  0.004       279        1340                10
+      p >= 0.5 val    0.50      0.748   0.775  0.164       800         174               202
+      p >= 0.5 test   0.50      0.769   0.766  0.155      1603         377               371
+
+  Class imbalance: same class-conditional features, different P(star); model trained at P(star) = 0.4, threshold 0.5
+     P(star)       n  stars  recall    FPR  precision  theory prec  accepted    AUC  mean p    ECE  mean p corr.  ECE corr.
+         0.5    3000   1498   0.606  0.230      0.724        0.725      1254  0.764   0.420  0.090        0.4792     0.0451
+         0.1   15000   1517   0.612  0.230      0.230        0.228      4035  0.762   0.341  0.240        0.0929     0.0184
+        0.01  150000   1505   0.600  0.239      0.025        0.025     36412  0.757   0.326  0.316        0.0094     0.0006
+    theory precision = recall*pi / (recall*pi + FPR*(1 - pi)).  'corr.' = Platt-calibrated probability with its log-odds shifted by log[pi/(1-pi)] - log[0.4/0.6]: the Bayes prior correction, which needs the new prior to be known.
+
+  Probability calibration on TEST (Platt calibrators fitted on VALIDATION)
+    model                      log loss   Brier    ECE   stars among p in [0.85, 0.95]
+    logistic (native)            0.5711  0.1952  0.037                            none
+    logistic (Platt)             0.5716  0.1954  0.040                            none
+    RBF SVM (Platt on margin)    0.4249  0.1347  0.025                     1.00 of 220
+    KNN k=21 (native votes)      0.4195  0.1323  0.024                     0.83 of 270
+    KNN (Platt)                  0.4049  0.1319  0.021                     0.93 of 209
+    tree (native leaf freq.)     0.6279  0.1387  0.045                       0.33 of 9
+    tree (Platt)                 0.4323  0.1374  0.020                            none
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_e_pr_roc_thresholds.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_e_reliability.png
+
+==============================================================================================================
+Experiment F: robustness and distribution shift
+  feature set 'all 5':
+    selected hyperparameters (validation): perceptron: 50 epochs; logistic: lam=0.0001; linear SVM: C=1; RBF SVM: C=1, gamma=1; KNN: k=21; tree: max_depth=6
+  feature set 'invariant 3':
+    selected hyperparameters (validation): perceptron: 50 epochs; logistic: lam=0.0001; linear SVM: C=0.01; RBF SVM: C=10, gamma=1; KNN: k=51; tree: max_depth=6
+
+  Model selection on the SELECTION sets (never the final test sets):
+    pipeline                   nominal AUC nominal LL    ECE  shift LL  shift AUC  worst AUC  robust LL  ms/1000
+    perceptron [all 5]               0.677      0.629  0.050     0.657      0.703      0.543      0.643      0.0
+    logistic [all 5]                 0.752      0.573  0.042     0.589      0.739      0.616      0.581      0.0
+    linear SVM [all 5]               0.748      0.578  0.052     0.599      0.732      0.616      0.589     35.4  (ineligible)
+    RBF SVM [all 5]                  0.874      0.431  0.022     0.551      0.795      0.634      0.491    306.8
+    KNN [all 5]                      0.882      0.419  0.021     0.487      0.846      0.802      0.453     80.2
+    tree [all 5]                     0.873      0.447  0.029     0.483      0.845      0.784      0.465      0.1
+    perceptron [invariant 3]         0.695      0.621  0.080     0.624      0.680      0.581      0.622      0.0  (ineligible)
+    logistic [invariant 3]           0.750      0.573  0.041     0.587      0.738      0.614      0.580      0.0
+    linear SVM [invariant 3]         0.746      0.575  0.033     0.585      0.738      0.611      0.580     37.1
+    RBF SVM [invariant 3]            0.887      0.418  0.030     0.475      0.854      0.787      0.447    252.5
+    KNN [invariant 3]                0.892      0.398  0.016     0.451      0.863      0.812      0.424     84.3  <- selected
+    tree [invariant 3]               0.875      0.437  0.029     0.475      0.846      0.783      0.456      0.1
+    selected: KNN [invariant 3] (k=51), thresholds: Policy A 0.15, Policy B 0.80
+
+  All candidates, feature set 'all 5', on the FINAL TEST sets (no retraining): AUC / balanced accuracy at calibrated p >= 0.5 / log loss
+    scenario                           perceptron            logistic          linear SVM             RBF SVM                 KNN                tree
+    nominal                      0.673/0.550/0.64    0.759/0.674/0.57    0.756/0.678/0.58    0.882/0.805/0.43    0.890/0.799/0.41    0.878/0.786/0.44
+    higher sensor noise          0.705/0.566/0.62    0.756/0.687/0.58    0.751/0.674/0.59    0.837/0.745/0.50    0.853/0.749/0.48    0.850/0.756/0.48
+    optical defocus              0.779/0.663/0.58    0.803/0.735/0.53    0.791/0.724/0.55    0.775/0.648/0.61    0.805/0.682/0.55    0.784/0.683/0.57
+    different prevalence         0.676/0.547/0.48    0.775/0.696/0.43    0.776/0.696/0.43    0.879/0.795/0.32    0.891/0.799/0.32    0.872/0.784/0.34
+    brighter background          0.720/0.500/0.81    0.754/0.681/0.59    0.741/0.680/0.61    0.634/0.511/0.72    0.807/0.670/0.56    0.833/0.741/0.51
+    hot-pixel contamination      0.776/0.584/0.58    0.755/0.697/0.58    0.753/0.682/0.58    0.918/0.833/0.37    0.929/0.833/0.34    0.922/0.812/0.37
+    unseen artifact type         0.542/0.485/0.69    0.613/0.581/0.67    0.618/0.592/0.67    0.796/0.720/0.55    0.809/0.719/0.52    0.796/0.711/0.53
+
+  All candidates, feature set 'invariant 3', on the FINAL TEST sets (no retraining): AUC / balanced accuracy at calibrated p >= 0.5 / log loss
+    scenario                           perceptron            logistic          linear SVM             RBF SVM                 KNN                tree
+    nominal                      0.677/0.547/0.63    0.759/0.673/0.57    0.757/0.664/0.57    0.892/0.811/0.41    0.900/0.809/0.39    0.879/0.784/0.43
+    higher sensor noise          0.683/0.570/0.63    0.756/0.689/0.58    0.756/0.681/0.58    0.855/0.772/0.47    0.864/0.765/0.45    0.849/0.754/0.48
+    optical defocus              0.801/0.705/0.55    0.804/0.732/0.53    0.802/0.726/0.53    0.793/0.672/0.58    0.819/0.691/0.53    0.783/0.681/0.57
+    different prevalence         0.681/0.550/0.48    0.775/0.693/0.43    0.773/0.688/0.43    0.886/0.808/0.32    0.898/0.807/0.30    0.878/0.787/0.34
+    brighter background          0.688/0.571/0.62    0.755/0.690/0.58    0.755/0.683/0.58    0.854/0.762/0.48    0.858/0.750/0.46    0.838/0.737/0.49
+    hot-pixel contamination      0.653/0.563/0.63    0.753/0.695/0.58    0.758/0.687/0.57    0.936/0.844/0.34    0.938/0.838/0.32    0.922/0.809/0.36
+    unseen artifact type         0.569/0.504/0.67    0.612/0.579/0.67    0.609/0.570/0.68    0.807/0.727/0.54    0.819/0.724/0.51    0.798/0.709/0.53
+
+  Selected system (KNN [invariant 3]) under each scenario, both policies:
+    scenario                  P(star) policy  recall    FPR  precision  accepted    ECE  mean p
+    nominal                     0.407      A   0.957  0.406      0.618      3785  0.020   0.391
+    nominal                     0.407      B   0.298  0.011      0.948       769  0.020   0.391
+    higher sensor noise         0.404      A   0.909  0.403      0.604      3644  0.044   0.363
+    higher sensor noise         0.404      B   0.247  0.014      0.922       650  0.044   0.363
+    optical defocus             0.396      A   0.882  0.406      0.588      3566  0.090   0.323
+    optical defocus             0.396      B   0.144  0.014      0.871       394  0.090   0.323
+    different prevalence        0.046      A   0.960  0.408      0.103      2604  0.174   0.221
+    different prevalence        0.046      B   0.277  0.010      0.575       134  0.174   0.221
+    brighter background         0.402      A   0.903  0.405      0.599      3629  0.052   0.357
+    brighter background         0.402      B   0.243  0.011      0.938       625  0.052   0.357
+    hot-pixel contamination     0.391      A   0.945  0.249      0.708      3127  0.057   0.334
+    hot-pixel contamination     0.391      B   0.308  0.008      0.960       752  0.057   0.334
+    unseen artifact type        0.409      A   0.957  0.599      0.525      4472  0.076   0.456
+    unseen artifact type        0.409      B   0.310  0.019      0.918       829  0.076   0.456
+
+  Prior shift (P(star) = 0.05): ECE 0.174 -> 0.004 after the Bayes prior correction; mean p 0.221 -> 0.043 (true star fraction 0.046)
+
+  Fraction ACCEPTED by subtype, Policy A (stars: higher is better; artifacts: lower):
+    scenario                  bright star  faint star   hot pixel     diffuse  noise peakcompact irregular       ghost
+    nominal                          1.00        0.95        0.09        0.43        0.67        0.19           -
+    higher sensor noise              1.00        0.89        0.08        0.44        0.66        0.17           -
+    optical defocus                  1.00        0.86        0.08        0.42        0.67        0.19           -
+    different prevalence             1.00        0.95        0.08        0.43        0.68        0.18           -
+    brighter background              1.00        0.89        0.10        0.42        0.67        0.17           -
+    hot-pixel contamination          1.00        0.93        0.10        0.44        0.68        0.16           -
+    unseen artifact type             1.00        0.95        0.09        0.40        0.66        0.20        0.95
+
+  Unlabelled shift monitor (no labels needed): standardized mean shift of each feature vs training, and % of candidates outside the training 0.5-99.5% range on any feature
+    scenario                        log peak      log width      roundness log background        log SNR   outside
+    nominal                            -0.01          -0.00          +0.00          -0.01          -0.01      4.0%
+    higher sensor noise                +0.27          +0.09          -0.04          +0.01          -0.05      5.7%
+    optical defocus                    -0.11          +0.38          -0.02          -0.02          -0.01      6.6%
+    different prevalence               +0.05          -0.08          -0.30          +0.01          +0.04      4.2%
+    brighter background                +1.97          +0.13          -0.05          +5.20          -0.07     99.8%
+    hot-pixel contamination            +0.39          -0.38          +0.27          +0.02          +0.28      4.5%
+    unseen artifact type               -0.13          +0.19          +0.17          +0.02          -0.11      3.8%
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_f_shift.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-4\outputs\exp_f_prior_shift_calibration.png
+
+==============================================================================================================
+  feature set 'all 5':
+    selected hyperparameters (validation): perceptron: 50 epochs; logistic: lam=0.0001; linear SVM: C=1; RBF SVM: C=1, gamma=1; KNN: k=21; tree: max_depth=6
+  feature set 'invariant 3':
+    selected hyperparameters (validation): perceptron: 50 epochs; logistic: lam=0.0001; linear SVM: C=0.01; RBF SVM: C=10, gamma=1; KNN: k=51; tree: max_depth=6
+{
+  "selected_model": "KNN [invariant 3]",
+  "hyperparameters": "k=51",
+  "features": [
+    "log width",
+    "roundness",
+    "log SNR"
+  ],
+  "standardizer_mean": [
+    0.23931859776127629,
+    0.7172400503787421,
+    2.4386077002063327
+  ],
+  "standardizer_std": [
+    0.5678634809405642,
+    0.28922756335176825,
+    1.0660156501977789
+  ],
+  "calibration": "Platt scaling on the validation split",
+  "training_prior": 0.4,
+  "thresholds": {
+    "A": 0.15,
+    "B": 0.8
+  },
+  "policies": {
+    "A": "high recall: val recall >= 0.95",
+    "B": "high precision: val precision >= 0.9"
+  },
+  "selection_rule": "min 0.5*nominal + 0.5*mean feature-shift log loss on unseen selection sets; nominal ECE <= 0.05; cost <= 1000.0 ms/1000; within 1% prefer cheaper",
+  "eligible": [
+    "perceptron [all 5]",
+    "logistic [all 5]",
+    "RBF SVM [all 5]",
+    "KNN [all 5]",
+    "tree [all 5]",
+    "logistic [invariant 3]",
+    "linear SVM [invariant 3]",
+    "RBF SVM [invariant 3]",
+    "KNN [invariant 3]",
+    "tree [invariant 3]"
+  ],
+  "seeds": {
+    "splits": {
+      "train": 401,
+      "val": 402,
+      "test": 403
+    },
+    "shift": {
+      "selection": 610,
+      "final test": 620
+    }
+  }
+}
+rebuild max |p1 - p2| = 0.00e+00
+

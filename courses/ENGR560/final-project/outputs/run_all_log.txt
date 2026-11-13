@@ -1,0 +1,137 @@
+==============================================================================================================
+Experiment A: one end-to-end execution through stellar_vision (Module 13 field, seed 200)
+  config fingerprint 065006e0b56d1041, mode hybrid, calibration m11-m12-synthetic-2026.1, catalogue module13-synthetic-seed13 (180 stars)
+  VERIFIED: boresight RA 149.12622 Dec +18.61901 roll 10.7633 deg (truth 149.12616 +18.61896 10.7646)
+  attitude error vs truth 4.60"; 1-sigma cross-boresight 0.12" / 0.11", roll 3.38"
+  quaternion (w,x,y,z) [0.46520586, -0.23897956, 0.53221415, 0.66574799]
+  74 candidates -> 54 sources -> 23 matched (20 beyond the hypothesis), catalogue fraction 1.00, reprojection RMS 0.098 px, reduced chi2 1.01
+  criteria: independent_matches 20 (ok); catalog_fraction 1.0 (ok); focal_length_margin 0.02998 (ok); reduced_chi2 1.013 (ok); reprojection_rms_px 0.0981 (ok); roll_sigma_arcsec 3.38 (ok); cross_sigma_arcsec 0.123 (ok); runner_up_match_ratio 0.0 (ok)
+  stage times (ms): calibration 55, detection 87, classification 68, centroiding 290, identification 516, verification 1, total 1326
+  WCS: CRVAL [149.126222, 18.61901], CRPIX [256.5, 256.5] (1-based)
+  serialised result -> C:\Users\jakec\.claude\sessions\machine_learning\final-project\outputs\exp_a_result.json
+  repeat run, classical: bit-identical True  (attitude error 4.60", 24 matches)
+  repeat run, hybrid   : bit-identical True  (attitude error 4.60", 23 matches)
+
+  regression / unit / negative test suite (pytest):
+    56 passed in 69.18s (0:01:09)
+
+  Module 13 Experiment C reproduced through the package (Module 13 settings: f +1%, no rules, no polish):
+    seed   M13 matches pkg matches  M13 att  pkg att  attitude bits
+    200             23          23    4.61"    4.61"      identical
+    201             19          19    5.29"    5.29"      identical
+    202             18          18    1.68"    1.68"      identical
+    203             22          22    0.84"    0.84"      identical
+    204             28          28    4.41"    4.41"      identical
+    205             23          23    7.45"    7.45"      identical
+
+==============================================================================================================
+Experiment B: verified solutions and explicit failure (default acceptance thresholds)
+
+  scenario                                  mode      outcome    code                    evidence
+  nominal field                             classical VERIFIED   -                       24 matched (21 independent), RMS 0.099 px, chi2r 0.97, err 4.6", sigma roll/cross 3.4"/0.12"
+  nominal field                             hybrid    VERIFIED   -                       23 matched (20 independent), RMS 0.098 px, chi2r 1.01, err 4.6", sigma roll/cross 3.4"/0.12"
+  focal length +2% (inside 3% tolerance)    classical VERIFIED   -                       19 matched (16 independent), RMS 0.093 px, chi2r 1.08, err 5.1", sigma roll/cross 8.6"/0.27"
+  focal length +2% (inside 3% tolerance)    hybrid    VERIFIED   -                       19 matched (16 independent), RMS 0.093 px, chi2r 1.08, err 5.1", sigma roll/cross 8.6"/0.27"
+  blank image                               classical REJECTED   NO_SOURCES              no sources detected
+  blank image                               hybrid    REJECTED   NO_SOURCES              no sources detected
+  near-blank: hot pixels + streaks          classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  near-blank: hot pixels + streaks          hybrid    REJECTED   NO_SOURCES              no sources detected
+  insufficient stars (4 in field)           classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  insufficient stars (4 in field)           hybrid    REJECTED   INSUFFICIENT_SOURCES    4 usable sources (need 5)
+  random false detections                   classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  random false detections                   hybrid    REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  wrong catalogue                           classical REJECTED   INSUFFICIENT_MATCHES    best hypothesis has only 1 matches beyond its 3 generating stars (need 6)
+  wrong catalogue                           hybrid    REJECTED   INSUFFICIENT_MATCHES    best hypothesis has only 1 matches beyond its 3 generating stars (need 6)
+  wrong sky region                          classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  wrong sky region                          hybrid    REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  focal length +6% (outside 3% tolerance)   classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  focal length +6% (outside 3% tolerance)   hybrid    REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  competing ambiguous hypotheses            classical REJECTED   AMBIGUOUS               competing hypothesis 120.00 deg away matches 23 stars vs 23
+  competing ambiguous hypotheses            hybrid    REJECTED   AMBIGUOUS               competing hypothesis 120.00 deg away matches 23 stars vs 23
+  weak star geometry                        classical REJECTED   WEAK_GEOMETRY           attitude poorly observable: roll sigma 457", cross-boresight sigma 2.3"
+  weak star geometry                        hybrid    REJECTED   WEAK_GEOMETRY           attitude poorly observable: roll sigma 457", cross-boresight sigma 2.3"
+
+  22/22 scenario runs ended in the expected outcome; false verified solutions: 0
+
+  criteria - accepted (nominal field, hybrid):
+    independent_matches      value         20   threshold        6   pass
+    catalog_fraction         value        1.0   threshold      0.5   pass
+    focal_length_margin      value    0.02998   threshold    0.002   pass
+    reduced_chi2             value      1.013   threshold      5.0   pass
+    reprojection_rms_px      value     0.0981   threshold      1.5   pass
+    roll_sigma_arcsec        value       3.38   threshold    200.0   pass
+    cross_sigma_arcsec       value      0.123   threshold      6.0   pass
+    runner_up_match_ratio    value        0.0   threshold      0.8   pass
+
+  criteria - rejected (duplicated pattern, hybrid):
+    independent_matches      value         20   threshold        6   pass
+    catalog_fraction         value     0.6765   threshold      0.5   pass
+    focal_length_margin      value    0.02997   threshold    0.002   pass
+    reduced_chi2             value      0.856   threshold      5.0   pass
+    reprojection_rms_px      value     0.0905   threshold      1.5   pass
+    roll_sigma_arcsec        value       4.87   threshold    200.0   pass
+    cross_sigma_arcsec       value      0.147   threshold      6.0   pass
+    runner_up_match_ratio    value        1.0   threshold      0.8   FAIL
+    runner-up hypothesis: 23 matches, 120.00 deg from the best
+
+  criteria - rejected (tight faint cluster, hybrid):
+    independent_matches      value          6   threshold        6   pass
+    catalog_fraction         value        1.0   threshold      0.5   pass
+    focal_length_margin      value    0.02518   threshold    0.002   pass
+    reduced_chi2             value      0.725   threshold      5.0   pass
+    reprojection_rms_px      value     0.2475   threshold      1.5   pass
+    roll_sigma_arcsec        value     457.04   threshold    200.0   FAIL
+    cross_sigma_arcsec       value      2.341   threshold      6.0   pass
+    runner_up_match_ratio    value        0.0   threshold      0.8   pass
+
+  attitude covariance (nominal, camera frame): sigma = (0.123", 0.110", 3.38") for (cross-x, cross-y, roll); roll / cross ratio 28x; correlations xy -0.10, x-roll +0.47, y-roll -0.20
+  normalised residuals d^2 (nominal): mean 1.85 (2 expected per star before fitting), fraction above the 99.9% point (13.8): 0.00
+  table -> C:\Users\jakec\.claude\sessions\machine_learning\final-project\outputs\exp_b_table.md
+
+==============================================================================================================
+  worker classical: 122 s
+  worker hybrid: 44 s
+
+Experiment C: classical vs hybrid complete systems (6 fields per condition, same images / camera / catalogue / rules)
+  condition               mode       solved false acc correct IDs wrong useful src artifacts stars lost cent err    RMS att med att max  ms/img
+  nominal                 classical    6/6          0     134/135     1       22.3       7.3          0    0.057  0.119    4.5"    7.4"    1576
+  nominal                 hybrid       6/6          0     133/135     0       22.2       0.2          0    0.055  0.096    4.5"    7.4"     641
+  low SNR                 classical    6/6          0      96/144     3       16.0       7.5          0    0.165  0.492    7.8"   23.1"     895
+  low SNR                 hybrid       5/6          0      83/144     1       15.0       0.0          6    0.158  0.458    6.0"   20.3"     394   codes: INSUFFICIENT_MATCHES
+  strong defocus          classical    6/6          0     132/132     2       22.0       8.2          0    0.208  0.381   12.8"   32.1"    1561
+  strong defocus          hybrid       6/6          0     121/132     0       20.2       0.8         10    0.190  0.318   18.1"   32.2"     519
+  hot pixels & streaks    classical    6/6          0     137/138     3       22.8      31.0          0    0.051  0.158    3.8"    6.3"    5635
+  hot pixels & streaks    hybrid       6/6          0     133/138     0       22.2       0.2          3    0.051  0.085    3.8"    7.9"     714
+  missing & uncatalogued  classical    6/6          0     121/121     0       20.2       6.7          0    0.053  0.079    2.0"    7.9"    2132
+  missing & uncatalogued  hybrid       6/6          0     120/121     0       20.0       0.0          1    0.052  0.079    2.0"    7.9"    1051
+  incorrect sky / catalog classical    0/6          0           -     0        8.2       5.3          0      nan    nan    nan"    nan"    1769   codes: INSUFFICIENT_MATCHES, NO_HYPOTHESIS
+  incorrect sky / catalog hybrid       0/6          0           -     0        8.0       0.0          1      nan    nan    nan"    nan"     571   codes: INSUFFICIENT_MATCHES, NO_HYPOTHESIS
+
+  stage times, mean over all 36 fields (ms):
+    mode          calibration      detection classification    centroiding identification   verification          total
+    classical            40.7          103.5            0.0         1980.6          129.4            0.3         2261.1
+    hybrid               35.1           93.6           68.1          311.9          132.9            0.3          648.4
+
+  peak memory:
+    classical  tracemalloc peak during one solve 5.0 MB (Python/NumPy heap); process peak working set 251 MB (before the first pipeline is built: 105 MB)
+    hybrid     tracemalloc peak during one solve 5.0 MB (Python/NumPy heap); process peak working set 536 MB (before the first pipeline is built: 105 MB)
+
+| Metric | Classical | Hybrid |
+|---|---|---|
+| Verified solve success rate (30 solvable fields) | 30/30 | 29/30 |
+| False solutions accepted (6 incorrect-sky/catalogue fields) | 0/6 | 0/6 |
+| Correct star IDs (of catalogue stars in frame) | 620/670 | 590/670 |
+| Incorrect star associations | 9 | 1 |
+| Median centroid error, matched stars (px) | 0.073 | 0.070 |
+| Reprojection RMS (px) | 0.294 | 0.249 |
+| Attitude error vs truth, median / p90 (arcsec) | 4.1 / 15.0 | 4.5 / 19.7 |
+| Mean time: calibration (ms) | 40.7 | 35.1 |
+| Mean time: detection (ms) | 103.5 | 93.6 |
+| Mean time: classification (ms) | 0.0 | 68.1 |
+| Mean time: centroiding (ms) | 1980.6 | 311.9 |
+| Mean time: identification (ms) | 129.4 | 132.9 |
+| Mean time: verification (ms) | 0.3 | 0.3 |
+| Mean time: total (ms) | 2261.1 | 648.4 |
+| Peak memory: tracemalloc during a solve / process working set (MB) | 5.0 / 251 | 5.0 / 536 |
+  saved C:\Users\jakec\.claude\sessions\machine_learning\final-project\outputs\exp_c_associations.png and C:\Users\jakec\.claude\sessions\machine_learning\final-project\outputs\exp_c_system_comparison.png
+

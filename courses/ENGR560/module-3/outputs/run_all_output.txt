@@ -1,0 +1,167 @@
+====================================================================================================
+Experiment A: four estimators on one shared training set (raw coefficients c0, c1, c2)
+  truth: c = [ 1.5  -0.8   0.35],  noise variance = 1.0
+
+  N = 50, seed 0:
+    method                      c0        c1        c2  train MSE  test MSE
+    linear lstsq           4.18493  -0.93929   0.00000     6.7022    8.0958
+    quad lstsq             1.57166  -0.74107   0.34660     1.0414    1.0296
+    quad grad. descent     1.57166  -0.74107   0.34660     1.0414    1.0296
+    quad sklearn           1.57166  -0.74107   0.34660     1.0414    1.0296
+    gradient descent: converged after 46 updates
+    |quad grad. descent - quad lstsq| = 3.42e-11
+    |quad sklearn - quad lstsq| = 2.90e-15
+    saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_a_fits_residuals.png
+
+  Repeated: 50 seeds per N, independent test set of 2000 (mean values)
+        N method               train MSE  test MSE  |c - c_true|  |c - c_lstsq|
+       20 linear lstsq            7.0348    8.9741        2.8434              -
+       20 quad lstsq              0.7793    1.1445        0.2352        0.0e+00
+       20 quad grad. descent      0.7793    1.1445        0.2352        3.5e-11
+       20 quad sklearn            0.7793    1.1445        0.2352        2.6e-15
+
+       50 linear lstsq            7.3304    8.3380        2.8982              -
+       50 quad lstsq              0.9427    1.0622        0.1963        0.0e+00
+       50 quad grad. descent      0.9427    1.0622        0.1963        3.2e-11
+       50 quad sklearn            0.9427    1.0622        0.1963        3.0e-15
+
+      200 linear lstsq            7.7576    8.0111        2.9857              -
+      200 quad lstsq              0.9763    1.0090        0.0893        0.0e+00
+      200 quad grad. descent      0.9763    1.0090        0.0893        2.3e-11
+      200 quad sklearn            0.9763    1.0090        0.0893        3.2e-15
+
+     1000 linear lstsq            7.7418    7.9218        2.9342              -
+     1000 quad lstsq              0.9980    0.9964        0.0430        0.0e+00
+     1000 quad grad. descent      0.9980    0.9964        0.0430        1.8e-11
+     1000 quad sklearn            0.9980    0.9964        0.0430        3.4e-15
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_a_sizes.png
+
+Additional challenge: high-degree polynomials (N = 50, 50 seeds; medians; gradient descent on 10 seeds, budget 20,000, eta = 1/lambda_max)
+  NE = normal equations solve(X^T X, X^T y) in the raw basis, compared with lstsq in the standardized basis: max prediction difference and relative coefficient difference
+   deg  cond raw X  cond std X  cond H(std)  train MSE   test MSE NE pred diff NE coef rel       GD status  GD train gap
+     1    2.89e+00    1.00e+00     1.00e+00     7.3693      8.155     2.66e-15    2.11e-16  100% converged      0.00e+00
+     2    1.63e+01    1.13e+00     1.29e+00     0.9267      1.025     5.88e-15    1.24e-15  100% converged      0.00e+00
+     3    7.01e+01    4.97e+00     2.47e+01     0.8878      1.039     7.11e-15    1.85e-15  100% converged      4.44e-16
+     5    1.90e+03    2.64e+01     6.95e+02     0.8665      1.089     2.66e-14    7.46e-15  100% converged      5.66e-15
+     8    3.14e+05    3.21e+02     1.03e+05     0.8105      1.245     1.37e-12    8.12e-13    0% converged      9.81e-03
+    10    1.02e+07    1.99e+03     3.97e+06     0.7847      1.403     4.36e-11    4.08e-11    0% converged      2.29e-02
+    12    3.40e+08    1.36e+04     1.84e+08     0.7383      1.885     1.61e-09    1.89e-09    0% converged      4.31e-02
+    15    7.21e+10    2.57e+05     6.61e+10     0.6565      4.293     3.52e-07    5.12e-07    0% converged      1.07e-01
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_a_high_degree.png
+
+====================================================================================================
+Experiment B: OLS vs WLS, N_train = 200, test N = 5000, 2000 seeds
+  noisy-test MSE of the PERFECT calibration: expected 0.04665, realized on this test set 0.04282
+         test MSE (noisy)  RMSE vs truth [px]  |theta - true|   mean a    sd a   mean b    sd b
+  OLS             0.04330             0.01949         0.04693   0.1505  0.0229   0.3996  0.0511
+  WLS             0.04310             0.01505         0.03624   0.1503  0.0177   0.3992  0.0397
+  WLS has the smaller calibration error in 68.3% of trials (so OLS wins 31.6% of the time)
+  mean squared calibration error ratio OLS / WLS = 1.68 (relative efficiency of WLS)
+  theory for seed-0 design: sd(b) OLS = 0.0552, WLS = 0.0414  (empirical sds above average over designs)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_b_ols_vs_wls.png
+
+Engineering extension: WLS with wrong reported uncertainties (1000 seeds; data always use the TRUE sigma)
+  weights from                               RMSE vs truth actual sd(b) reported sd(b)  chi2/dof  95% CI cover b
+  correct sigma                                    0.01502       0.0391         0.0399      1.00           95.9%
+  all sigma x0.33 (uniformly overconfident)        0.01502       0.0391         0.0133      9.00           48.2%
+  faint (I<20) sigma / 2                           0.01733       0.0446         0.0368      1.58           88.7%
+  faint (I<20) sigma / 5                           0.03763       0.0983         0.0259      5.52           41.1%
+  faint (I<20) sigma / 20                          0.06099       0.1644         0.0083     74.60           10.3%
+  constant sigma (= OLS)                           0.01965       0.0510         0.0465      1.22           92.7%
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_b_wrong_sigma.png
+
+====================================================================================================
+Experiment C: ridge and lasso. N_train = 30, N_val = 30, N_test = 2000, 100 seeds
+  true model is cubic; test MSE of the TRUE function = 0.9671 (noise floor)
+  lasso convergence warnings: 571 of 11400 fits; all at degree >= 10 with alpha <= 3.2e-03
+
+  Unregularized OLS by degree (median over seeds):
+    degree  train MSE    val MSE   test MSE
+         1     2.6771     3.1656     3.2010
+         2     1.1544     1.3278     1.3821
+         3     0.8922     1.1078     1.0754
+         5     0.8052     1.2238     1.2134
+        10     0.6327     2.4495     3.2186
+        15     0.4457   139.9237  1054.8491
+
+  Degree 15: test MSE vs regularization strength (median over seeds)
+    ridge: 1e-08: 26.225, 3e-07: 6.979, 1e-05: 3.406, 3e-04: 2.400, 1e-02: 1.369, 3e-01: 1.366, 1e+01: 4.694
+    lasso: 1e-04: 3.226, 6e-04: 2.523, 3e-03: 1.465, 2e-02: 1.253, 1e-01: 1.132, 6e-01: 1.777, 3e+00: 8.853
+
+  Final comparison: degree (and alpha) chosen on VALIDATION, scored once on TEST
+    model                              mean test   median  90th pct   selected degrees
+    OLS, degree 15 (no selection)      4.179e+07     1055 2.959e+06   
+    OLS, degree 3 (oracle: true form)      1.121    1.075     1.255   
+    OLS, degree chosen on val               1.25    1.131     1.391   d2:20, d3:62, d5:16, d10:1, d15:1
+    Ridge, degree+alpha on val             1.191    1.082     1.353   d2:12, d3:50, d5:21, d10:10, d15:7
+    Lasso, degree+alpha on val             1.246    1.109     1.368   d2:14, d3:42, d5:21, d10:14, d15:9
+    validated ridge beats validated OLS on test in 67% of seeds
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_c_regularization.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_c_lasso_path_and_fits.png
+
+====================================================================================================
+Experiment D: robust regression, N_train = 200, 200 seeds per fraction
+  corruption: extra offset ~ N(1.0, 2.0^2) px on a random fraction of training points
+  RMSE vs noise-free calibration on a clean evaluation set [px] (median, [25th-75th pct])
+  fraction                   OLS                   WLS                 Huber                RANSAC
+        0%  0.0189 [0.012-0.028]  0.0149 [0.010-0.021]  0.0159 [0.011-0.023]  0.0192 [0.013-0.027]
+        5%  0.0627 [0.039-0.083]  0.0620 [0.036-0.088]  0.0174 [0.011-0.025]  0.0203 [0.013-0.029]
+       10%  0.1184 [0.085-0.155]  0.1159 [0.088-0.156]  0.0193 [0.013-0.029]  0.0201 [0.015-0.030]
+       20%  0.2076 [0.171-0.246]  0.2070 [0.162-0.251]  0.0307 [0.020-0.042]  0.0240 [0.015-0.034]
+       30%  0.3133 [0.250-0.372]  0.3043 [0.251-0.369]  0.0490 [0.037-0.061]  0.0253 [0.016-0.035]
+       40%  0.4128 [0.338-0.473]  0.3999 [0.341-0.468]  0.0834 [0.064-0.101]  0.0310 [0.018-0.051]
+
+  Parameter error |theta - theta_true| (median)    and    training MSE on the corrupted training data (median)
+  fraction       OLS       WLS     Huber    RANSAC   |       OLS       WLS     Huber    RANSAC
+        0%    0.0438    0.0321    0.0345    0.0420   |    0.0452    0.0454    0.0455    0.0457
+        5%    0.1058    0.1004    0.0355    0.0476   |    0.2660    0.2668    0.2703    0.2737
+       10%    0.1785    0.1800    0.0427    0.0486   |    0.5136    0.5140    0.5263    0.5311
+       20%    0.2637    0.2681    0.0559    0.0526   |    0.9818    0.9830    1.0151    1.0299
+       30%    0.3730    0.3824    0.0707    0.0582   |    1.4460    1.4480    1.5094    1.5268
+       40%    0.4859    0.5020    0.1089    0.0714   |    1.8770    1.8781    1.9863    2.0499
+
+  RANSAC outlier detection (positive = flagged as outlier; mean over seeds)
+  fraction  precision   recall  false-reject rate  corrupted but within 3 sigma
+        5%      0.712    0.784              0.026                         21.1%
+       10%      0.820    0.797              0.026                         20.1%
+       20%      0.904    0.795              0.025                         20.1%
+       30%      0.941    0.801              0.025                         19.7%
+       40%      0.952    0.799              0.030                         19.6%
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_d_robust.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_d_ransac_detection.png
+
+====================================================================================================
+Experiment E: integrated evaluation on deliberately imperfect calibration data
+  5% corrupted, N_train/val/test = 300/300/5000
+
+  Validation scores, seed 0 (10%-trimmed mean of z^2; lower is better):
+                     OLS       WLS     HUBER    RANSAC
+    r             0.7369    0.7253    0.7125    0.7138
+    r2            0.7071    0.7034    0.6991    0.6968
+    quad          0.7323    0.7155    0.6985    0.7134
+    quartic       0.7515    0.7258    0.7108    0.7444
+  best score 0.6968; within 2%: OLS [r2], WLS [r2], HUBER [r2], RANSAC [r2], HUBER [quad]  ->  selected RANSAC [r2]
+
+  Test-set metrics, seed 0 (RMSE/MAE/MedAE vs noisy measurements incl. corrupted ones; RMSE_truth vs noise-free calibration;
+  z = standardized residual on clean points; CI95 = mean-function band covers the truth; PI95 = prediction interval covers a clean measurement)
+    model                       RMSE             MAE           MedAE      RMSE_truth       param_err           z_std      frac_|z|>3 CI95_mean_cover      PI95_cover      PI95_faint     PI95_bright
+    no correction             0.6418          0.3918          0.2942          0.3072               -          1.3265          0.1788          0.0000          0.6166          0.8135          0.5207
+    OLS [r]                   0.5370          0.2398          0.1274          0.0337               -          0.3728          0.0198          1.0000          0.9977          0.9880          1.0000
+    OLS [r2]                  0.5352          0.2369          0.1262          0.0099          0.0190          0.3685          0.0202          1.0000          0.9977          0.9880          1.0000
+    WLS [r2]                  0.5353          0.2368          0.1254          0.0075          0.0073          1.0094          0.0426          1.0000          0.9436          0.9531          0.9491
+    HUBER [r2]                0.5356          0.2368          0.1256          0.0080          0.0251          1.0093          0.0426          1.0000          0.9438          0.9542          0.9474
+    RANSAC [r2]               0.5360          0.2369          0.1248          0.0085          0.0299          1.0095          0.0422          1.0000          0.9434          0.9553          0.9457
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_e_residual_diagnostics.png
+
+  Over 50 seeds the validation rule selected: HUBER [r2] x23, RANSAC [r2] x19, HUBER [r] x3, OLS [r2] x2, RANSAC [quad] x1, RANSAC [r] x1, WLS [r2] x1
+    model            RMSE_truth median  95th pct    worst    MedAE  CI95 mean  PI95 all  PI95 faint  PI95 bright
+    no correction               0.3074    0.3108   0.3123   0.2959       0.0%     61.2%       82.4%        51.1%
+    OLS [r2]                    0.0625    0.1059   0.1201   0.1356      75.9%     99.7%       98.4%       100.0%
+    WLS [r2]                    0.0596    0.1116   0.1214   0.1360      24.7%     93.0%       94.4%        92.3%
+    RANSAC [r2]                 0.0148    0.0490   0.0754   0.1268      85.8%     94.8%       94.9%        94.7%
+    selected                    0.0125    0.0324   0.0376   0.1268      91.0%     95.1%       95.0%        95.1%
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-3\outputs\exp_e_final_predictor.png
+

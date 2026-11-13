@@ -1,0 +1,144 @@
+==============================================================================
+Step 1 - baseline
+==============================================================================
+  Module 6/7 estimator: 1920 x 1080 camera, 20 deg HFOV, 20 stars, 0.2 px; accelerometer 0.005 m/s^2
+  noise and 0.005 m/s^2 bias; misalignment 0.05 deg; time 0.1 s; no atmospheric correction; WGS84-normal
+  vertical; Module 2 Earth orientation. 10 observations per instrument, boresight 30 deg from zenith.
+  New in this module, as assumptions about the real world: standard atmosphere, stellar aberration and
+  proper motion, deflection of the vertical 5 arcsec per component, principal point 0.5 px, focal
+  length 0.05 %, lens distortion k1 = 0.02. All illustrative; none is a verified specification.
+
+  Same estimator in the idealized Module 6/7 world: RMS 9.05 km, 95th percentile 16.55 km.
+  In the physically perturbed world:                 RMS 9.20 km, 95th percentile 15.60 km.
+
+==============================================================================
+Step 2 - each new effect, neglected and then corrected (that effect alone, 200 instruments)
+==============================================================================
+  effect                          neglected: RMS   95th pct    corrected: RMS   95th pct
+  Atmospheric refraction                 1.04 km    1.06 km               0 m        0 m
+  Stellar apparent place                   391 m      561 m               0 m        0 m
+  Deflection of the vertical               226 m      375 m              43 m       77 m
+  Camera intrinsics                        809 m    1.49 km              81 m      148 m
+  Corrections applied: refraction model at the true conditions; apparent-place star model;
+  deflection known to 1 arcsec; intrinsics calibrated to 0.05 px and 0.005 % with distortion modelled.
+
+==============================================================================
+Step 3 - combined error budget
+==============================================================================
+
+Baseline
+  error source                class          assumed (illustrative)                     RMS   95th pct   share
+  Camera-IMU misalignment     fixed          180" per axis                          7.65 km   13.58 km   70.8%
+  Accelerometer bias          fixed          0.005 m/s^2 per axis                   4.71 km    8.03 km   26.8%
+  Atmospheric refraction      environmental  not modelled, 1013 hPa, 15 C           1.04 km    1.06 km    1.3%
+  Camera intrinsics           fixed          pp 0.5 px, f 0.05 %, k1 0.02 ignored     809 m    1.49 km    0.8%
+  Stellar apparent place      environmental  not modelled, aberration + pm            391 m      561 m    0.2%
+  Deflection of the vertical  geographic     5" per component                         226 m      375 m    0.1%
+  Accelerometer noise         random         0.005 m/s^2 x 200                        109 m      179 m    0.0%
+  Star centroid noise         random         0.2 px, 20 stars                          86 m      165 m    0.0%
+  Clock                       fixed          0.1 s                                     32 m       65 m    0.0%
+  Earth orientation data      geographic     UT1 1.8 ms, pole 5 mas                     1 m        1 m    0.0%
+  root-sum-square of the sources                                                    9.09 km
+  combined Monte Carlo (1000 instruments)                                           9.20 km   15.60 km   median 7.85 km
+  by class: fixed 9.02 km (98.4%), environmental 1.11 km (1.5%), geographic 226 m (0.1%), random 139 m (0.0%)
+  population accuracy 9.20 km RMS; within-instrument repeatability 398 m RMS (scatter of one instrument's own fixes).
+
+==============================================================================
+Step 4 - candidate improvements
+==============================================================================
+  Each applied alone to the baseline (300 instruments, same random seed):
+  candidate                                        RMS   95th pct   RMS change  95th change  RMS ratio
+  baseline                                     9.20 km   16.75 km         -0 m         -0 m       1.00
+  Diverse-attitude calibration (20 obs.)         452 m      696 m      -8751 m     -16056 m       0.05
+  Camera-IMU alignment 10x better (18")        4.96 km    8.30 km      -4247 m      -8455 m       0.54
+  Accelerometer bias 10x smaller               7.90 km   14.26 km      -1306 m      -2489 m       0.86
+  Atmospheric refraction correction            9.10 km   16.39 km        -98 m       -360 m       0.99
+  Camera intrinsic calibration                 9.16 km   16.97 km        -48 m       +215 m       0.99
+  Apparent-place star model                    9.17 km   16.80 km        -37 m        +46 m       1.00
+  Narrower field (10 deg)                      9.17 km   16.86 km        -35 m       +110 m       1.00
+  Deflection correction (to 1")                9.20 km   16.75 km         -3 m         +2 m       1.00
+  Absolute time 10x better (0.01 s)            9.20 km   16.76 km         +0 m         +4 m       1.00
+  Point at the zenith                          9.22 km   15.81 km        +15 m       -940 m       1.00
+  40 matched stars                             9.29 km   16.09 km        +86 m       -658 m       1.01
+  Only improvements to the dominant terms move the total. Corrections worth hundreds of metres
+  are invisible behind nine kilometres of alignment and bias error: ranking by individual gain
+  from the baseline says nothing about them, so they are also applied in sequence below.
+
+  Applied cumulatively:
+  after adding                                      median       RMS   95th pct
+  (baseline)                                       7.85 km   9.20 km   15.60 km
+  + Diverse-attitude calibration (20 obs.)           409 m     453 m      696 m
+  + Accelerometer bias 10x smaller                   427 m     468 m      716 m
+  + Atmospheric refraction correction                321 m     371 m      602 m
+  + Camera intrinsic calibration                     321 m     369 m      603 m
+  + Apparent-place star model                        195 m     231 m      409 m
+  + Deflection correction (to 1")                     82 m      97 m      161 m
+  + Absolute time 10x better (0.01 s)                 79 m      93 m      161 m
+  + 40 matched stars                                  76 m      93 m      152 m
+  + Accelerometer bias 1e-4 m/s^2 (10 micro-g)        73 m      91 m      155 m
+
+Improved scenario (all of the above)
+  error source                class          assumed (illustrative)                     RMS   95th pct   share
+  Accelerometer noise         random         0.005 m/s^2 x 200                         72 m      121 m   69.7%
+  Deflection of the vertical  geographic     5" per component, corrected to 1"         41 m       68 m   23.2%
+  Accelerometer bias          fixed          0.0001 m/s^2 per axis                     16 m       32 m    3.6%
+  Star centroid noise         random         0.2 px, 40 stars                          16 m       24 m    3.3%
+  Clock                       fixed          0.01 s                                     3 m        6 m    0.1%
+  Camera intrinsics           fixed          pp 0.05 px, f 0.005 %, k1 0.02 modelled       1 m        3 m    0.0%
+  Earth orientation data      geographic     UT1 1.8 ms, pole 5 mas                     1 m        1 m    0.0%
+  Camera-IMU misalignment     fixed          180" per axis, estimated                   0 m        0 m    0.0%
+  Atmospheric refraction      environmental  modelled, 1013 hPa, 15 C                   0 m        0 m    0.0%
+  Stellar apparent place      environmental  modelled, aberration + pm                  0 m        0 m    0.0%
+  root-sum-square of the sources                                                       86 m
+  combined Monte Carlo (500 instruments)                                               92 m      161 m   median 75 m
+  by class: random 74 m (73.0%), geographic 41 m (23.2%), fixed 17 m (3.8%), environmental 0 m (0.0%)
+  population accuracy 92 m RMS; within-instrument repeatability 7.86 km RMS (scatter of one instrument's own fixes).
+
+  Dimensionless sensitivity S = d ln(RMS error) / d ln(parameter), from x0.5 and x2 runs:
+  parameter                       baseline  improved
+  camera-IMU misalignment            +0.69         -
+  accelerometer bias                 +0.30     +0.01
+  principal point                    +0.01     -0.00
+  deflection of the vertical         -0.00         -
+  clock                              -0.00     +0.00
+  centroid noise                     -0.00     +0.09
+  accelerometer noise                -0.00     +0.68
+  deflection model residual              -     +0.24
+  The sensitivities of independent sources are their shares of the error variance, so they sum to
+  about one. In the baseline the leverage is all in alignment and bias. Once those are dealt with
+  it moves to whatever is then largest. Sensitivity shows where accuracy leverage is, not which
+  improvement is affordable.
+
+==============================================================================
+Step 5 - predicted uncertainty versus Monte Carlo
+==============================================================================
+  scenario                                      actual RMS  reported RMS  mean NEES  95% coverage
+  Baseline, fixed errors not declared              9.19 km         129 m    11617.0          0.0%
+  Baseline, uncertainties declared                 9.20 km       9.15 km        2.0         95.2%
+  Improved, uncertainties declared                    92 m          92 m        2.0         94.6%
+  Declared = accelerometer bias and calibration as shared errors (Module 7),
+  plus clock and deflection added to the position covariance. NOT in any
+  covariance: the biases from unmodelled refraction and aberration, and
+  focal-length or distortion errors.
+  In the baseline those undeclared biases (about 1 km) hide inside a 9 km
+  declared uncertainty, so coverage looks healthy for the wrong reason.
+  Clean residuals and a plausible ellipse do not show that the model is
+  complete; they show that the remaining errors are small beside the ones
+  that were declared.
+
+==============================================================================
+Against the two objectives
+==============================================================================
+  Baseline   median 7.85 km, RMS 9.20 km, 95th 15.60 km;  within 10 NM 98%, 6 NM 79%, 200 m 0%, 100 m 0%
+  Improved   median 75 m, RMS 92 m, 95th 161 m;  within 10 NM 100%, 6 NM 100%, 200 m 99%, 100 m 70%
+
+  Dominant limitations, baseline: camera-IMU misalignment and accelerometer
+  bias, which are fixed instrument errors that no amount of repeated
+  observation removes.
+  Dominant limitations, improved: accelerometer noise (72 m), deflection of the vertical (41 m), accelerometer bias (16 m).
+  Remaining uncertainties this model does not cover: real star density and
+  identification errors, real atmospheric conditions and their errors,
+  measured deflection data, unmodelled acceleration (Module 5), thermal
+  drift of the calibration, and whether the assumed error sizes are right.
+
+Saved error_budget.png, improvement_ranking.png and performance_comparison.png

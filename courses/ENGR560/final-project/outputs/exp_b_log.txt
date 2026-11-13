@@ -1,0 +1,62 @@
+Experiment B: verified solutions and explicit failure (default acceptance thresholds)
+
+  scenario                                  mode      outcome    code                    evidence
+  nominal field                             classical VERIFIED   -                       24 matched (21 independent), RMS 0.099 px, chi2r 0.97, err 4.6", sigma roll/cross 3.4"/0.12"
+  nominal field                             hybrid    VERIFIED   -                       23 matched (20 independent), RMS 0.098 px, chi2r 1.01, err 4.6", sigma roll/cross 3.4"/0.12"
+  focal length +2% (inside 3% tolerance)    classical VERIFIED   -                       19 matched (16 independent), RMS 0.093 px, chi2r 1.08, err 5.1", sigma roll/cross 8.6"/0.27"
+  focal length +2% (inside 3% tolerance)    hybrid    VERIFIED   -                       19 matched (16 independent), RMS 0.093 px, chi2r 1.08, err 5.1", sigma roll/cross 8.6"/0.27"
+  blank image                               classical REJECTED   NO_SOURCES              no sources detected
+  blank image                               hybrid    REJECTED   NO_SOURCES              no sources detected
+  near-blank: hot pixels + streaks          classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  near-blank: hot pixels + streaks          hybrid    REJECTED   NO_SOURCES              no sources detected
+  insufficient stars (4 in field)           classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  insufficient stars (4 in field)           hybrid    REJECTED   INSUFFICIENT_SOURCES    4 usable sources (need 5)
+  random false detections                   classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  random false detections                   hybrid    REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  wrong catalogue                           classical REJECTED   INSUFFICIENT_MATCHES    best hypothesis has only 1 matches beyond its 3 generating stars (need 6)
+  wrong catalogue                           hybrid    REJECTED   INSUFFICIENT_MATCHES    best hypothesis has only 1 matches beyond its 3 generating stars (need 6)
+  wrong sky region                          classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  wrong sky region                          hybrid    REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  focal length +6% (outside 3% tolerance)   classical REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  focal length +6% (outside 3% tolerance)   hybrid    REJECTED   NO_HYPOTHESIS           no geometrically compatible catalogue triangle in the search region
+  competing ambiguous hypotheses            classical REJECTED   AMBIGUOUS               competing hypothesis 120.00 deg away matches 23 stars vs 23
+  competing ambiguous hypotheses            hybrid    REJECTED   AMBIGUOUS               competing hypothesis 120.00 deg away matches 23 stars vs 23
+  weak star geometry                        classical REJECTED   WEAK_GEOMETRY           attitude poorly observable: roll sigma 457", cross-boresight sigma 2.3"
+  weak star geometry                        hybrid    REJECTED   WEAK_GEOMETRY           attitude poorly observable: roll sigma 457", cross-boresight sigma 2.3"
+
+  22/22 scenario runs ended in the expected outcome; false verified solutions: 0
+
+  criteria - accepted (nominal field, hybrid):
+    independent_matches      value         20   threshold        6   pass
+    catalog_fraction         value        1.0   threshold      0.5   pass
+    focal_length_margin      value    0.02998   threshold    0.002   pass
+    reduced_chi2             value      1.013   threshold      5.0   pass
+    reprojection_rms_px      value     0.0981   threshold      1.5   pass
+    roll_sigma_arcsec        value       3.38   threshold    200.0   pass
+    cross_sigma_arcsec       value      0.123   threshold      6.0   pass
+    runner_up_match_ratio    value        0.0   threshold      0.8   pass
+
+  criteria - rejected (duplicated pattern, hybrid):
+    independent_matches      value         20   threshold        6   pass
+    catalog_fraction         value     0.6765   threshold      0.5   pass
+    focal_length_margin      value    0.02997   threshold    0.002   pass
+    reduced_chi2             value      0.856   threshold      5.0   pass
+    reprojection_rms_px      value     0.0905   threshold      1.5   pass
+    roll_sigma_arcsec        value       4.87   threshold    200.0   pass
+    cross_sigma_arcsec       value      0.147   threshold      6.0   pass
+    runner_up_match_ratio    value        1.0   threshold      0.8   FAIL
+    runner-up hypothesis: 23 matches, 120.00 deg from the best
+
+  criteria - rejected (tight faint cluster, hybrid):
+    independent_matches      value          6   threshold        6   pass
+    catalog_fraction         value        1.0   threshold      0.5   pass
+    focal_length_margin      value    0.02518   threshold    0.002   pass
+    reduced_chi2             value      0.725   threshold      5.0   pass
+    reprojection_rms_px      value     0.2475   threshold      1.5   pass
+    roll_sigma_arcsec        value     457.04   threshold    200.0   FAIL
+    cross_sigma_arcsec       value      2.341   threshold      6.0   pass
+    runner_up_match_ratio    value        0.0   threshold      0.8   pass
+
+  attitude covariance (nominal, camera frame): sigma = (0.123", 0.110", 3.38") for (cross-x, cross-y, roll); roll / cross ratio 28x; correlations xy -0.10, x-roll +0.47, y-roll -0.20
+  normalised residuals d^2 (nominal): mean 1.85 (2 expected per star before fitting), fraction above the 99.9% point (13.8): 0.00
+  table -> C:\Users\jakec\Development\Autonomous Systems Engineering Curriculum\courses\ENGR560\final-project\outputs\exp_b_table.md

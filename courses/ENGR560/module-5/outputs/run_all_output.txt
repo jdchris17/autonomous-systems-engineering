@@ -1,0 +1,363 @@
+==============================================================================================================
+Experiment A: data leakage and grouped evaluation (20 seeds per cell)
+  realistic development set: 50 images, 7616 candidates, per-image star fraction 0.11-0.70
+
+  Required table - realistic data, all 5 features: mean (sd) over 20 seeds; 'new images' = model trained on all 50 images, tested on 30 brand-new images
+
+    logistic
+      quantity                          random split     grouped split  new images
+      training accuracy                0.645 (0.004)     0.651 (0.010)           -
+      test accuracy                    0.645 (0.008)     0.629 (0.021)       0.660
+      ROC AUC                          0.670 (0.008)     0.656 (0.021)       0.678
+      precision                        0.543 (0.020)     0.536 (0.055)       0.541
+      recall                           0.308 (0.017)     0.295 (0.039)       0.337
+      Brier score                      0.214 (0.002)     0.221 (0.010)       0.209
+      test star fraction               0.373 (0.007)     0.384 (0.030)           -
+      images in test set                        50.0              15.6           -
+      independent (unseen) test images               0.0              15.6          30
+
+    KNN k=5
+      quantity                          random split     grouped split  new images
+      training accuracy                0.827 (0.003)     0.834 (0.004)           -
+      test accuracy                    0.747 (0.006)     0.720 (0.012)       0.724
+      ROC AUC                          0.807 (0.007)     0.777 (0.009)       0.772
+      precision                        0.671 (0.012)     0.650 (0.038)       0.625
+      recall                           0.630 (0.011)     0.595 (0.047)       0.576
+      Brier score                      0.174 (0.004)     0.193 (0.008)       0.191
+      test star fraction               0.373 (0.007)     0.384 (0.030)           -
+      images in test set                        50.0              15.6           -
+      independent (unseen) test images               0.0              15.6          30
+
+    KNN k=51
+      quantity                          random split     grouped split  new images
+      training accuracy                0.771 (0.003)     0.778 (0.005)           -
+      test accuracy                    0.761 (0.006)     0.732 (0.018)       0.751
+      ROC AUC                          0.838 (0.007)     0.807 (0.013)       0.820
+      precision                        0.712 (0.013)     0.685 (0.043)       0.675
+      recall                           0.604 (0.016)     0.564 (0.051)       0.588
+      Brier score                      0.159 (0.003)     0.173 (0.008)       0.163
+      test star fraction               0.373 (0.007)     0.384 (0.030)           -
+      images in test set                        50.0              15.6           -
+      independent (unseen) test images               0.0              15.6          30
+
+    tree d=10
+      quantity                          random split     grouped split  new images
+      training accuracy                0.844 (0.005)     0.851 (0.007)           -
+      test accuracy                    0.734 (0.004)     0.707 (0.013)       0.740
+      ROC AUC                          0.780 (0.007)     0.752 (0.016)       0.779
+      precision                        0.651 (0.012)     0.626 (0.042)       0.661
+      recall                           0.621 (0.040)     0.600 (0.052)       0.561
+      Brier score                      0.197 (0.005)     0.218 (0.013)       0.190
+      test star fraction               0.373 (0.007)     0.384 (0.030)           -
+      images in test set                        50.0              15.6           -
+      independent (unseen) test images               0.0              15.6          30
+
+  AUC summary: random-split estimate, grouped-split estimate, truth on new images, and the sibling control (same test candidates)
+    data       features     model        random  grouped  new imgs  rand-new  grp-new  sib: with  without    leak
+    control    all 5        logistic      0.763    0.763     0.770    -0.008   -0.007      0.765    0.765  -0.000
+    control    all 5        KNN k=5       0.862    0.862     0.861    +0.000   +0.000      0.861    0.862  -0.001
+    control    all 5        KNN k=51      0.896    0.897     0.896    +0.000   +0.001      0.898    0.897  +0.000
+    control    all 5        tree d=10     0.826    0.829     0.842    -0.016   -0.013      0.831    0.828  +0.004
+    realistic  all 5        logistic      0.670    0.656     0.678    -0.008   -0.022      0.660    0.654  +0.005
+    realistic  all 5        KNN k=5       0.807    0.777     0.772    +0.036   +0.005      0.795    0.776  +0.019
+    realistic  all 5        KNN k=51      0.838    0.807     0.820    +0.018   -0.013      0.828    0.808  +0.020
+    realistic  all 5        tree d=10     0.780    0.752     0.779    +0.001   -0.027      0.774    0.753  +0.021
+    realistic  invariant 3  logistic      0.671    0.661     0.688    -0.017   -0.027      0.661    0.659  +0.002
+    realistic  invariant 3  KNN k=5       0.800    0.797     0.791    +0.010   +0.006      0.798    0.797  +0.001
+    realistic  invariant 3  KNN k=51      0.843    0.835     0.826    +0.016   +0.008      0.839    0.838  +0.002
+    realistic  invariant 3  tree d=10     0.781    0.772     0.777    +0.004   -0.005      0.778    0.773  +0.005
+    stress     all 5        logistic      0.670    0.651     0.692    -0.022   -0.041      0.659    0.649  +0.009
+    stress     all 5        KNN k=5       0.816    0.756     0.756    +0.060   -0.001      0.801    0.758  +0.043
+    stress     all 5        KNN k=51      0.842    0.802     0.812    +0.030   -0.010      0.829    0.801  +0.028
+    stress     all 5        tree d=10     0.782    0.742     0.779    +0.004   -0.037      0.773    0.740  +0.033
+    stress     invariant 3  logistic      0.671    0.661     0.688    -0.017   -0.027      0.661    0.659  +0.002
+    stress     invariant 3  KNN k=5       0.800    0.797     0.791    +0.010   +0.006      0.798    0.797  +0.001
+    stress     invariant 3  KNN k=51      0.843    0.835     0.826    +0.016   +0.008      0.839    0.838  +0.002
+    stress     invariant 3  tree d=10     0.781    0.772     0.777    +0.004   -0.005      0.778    0.773  +0.005
+
+  Test-set composition (realistic): star fraction random 0.373 +- 0.007, grouped 0.384 +- 0.030
+  KNN k=5 AUC spread across seeds: random sd 0.007, grouped sd 0.009; grouped < random in 100% of seeds
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-5\outputs\exp_a_leakage.png
+
+==============================================================================================================
+Experiment B: K-fold and nested cross-validation
+
+  Part 1 - own kfold_indices vs sklearn KFold
+         n   k  shuffle  each once in val  train/val disjoint  sizes +-1  == sklearn
+        10   3    False              True                True       True        True
+       101   5     True              True                True       True        True
+      7616   5     True              True                True       True        True
+        50  50    False              True                True       True        True
+        13   4     True              True                True       True        True
+    k > n correctly rejected with ValueError
+
+  Part 2 - 5-fold CV of KNN k=51 (all 5 features); truth on 30 new images: AUC 0.820
+    splitter               mean AUC  fold sd    min    max  val star frac sd  val images  val imgs also in train
+    KFold (shuffled)          0.837    0.011  0.819  0.863             0.006        50.0                    50.0
+    StratifiedKFold           0.837    0.007  0.819  0.851             0.000        50.0                    50.0
+    GroupKFold                0.816    0.018  0.778  0.854             0.082        10.0                     0.0
+    StratifiedGroupKFold      0.817    0.012  0.791  0.834             0.016        10.0                     0.0
+    (fold sd = sd of the 5 fold scores, averaged over 5 reshuffles; min/max over all 25 folds)
+
+  Part 3 - nested cross-validation (5 outer x 3 inner folds), metric ROC AUC
+
+    KNN, grouped splits (10 s)
+      outer fold                  selected  best inner  outer score  fixed cfg
+               0                 {'k': 21}       0.797        0.816      0.816
+               1                 {'k': 51}       0.798        0.802      0.805
+               2                 {'k': 51}       0.808        0.827      0.830
+               3                 {'k': 51}       0.788        0.828      0.831
+               4                 {'k': 21}       0.786        0.806      0.806
+      fixed configuration {'k': 21}: outer CV 0.818 +- 0.011; untouched test 0.813
+      best inner-CV score (mean of the 5 maxima):  0.795
+      nested outer-fold estimate:                0.816 +- 0.011
+      final model (selected on all dev data: {'k': 21}, inner best 0.801): untouched test 0.813
+
+    KNN, ungrouped splits (6 s)
+      outer fold                  selected  best inner  outer score  fixed cfg
+               0                 {'k': 21}       0.839        0.836      0.836
+               1                 {'k': 21}       0.840        0.826      0.826
+               2                 {'k': 21}       0.828        0.849      0.849
+               3                 {'k': 21}       0.832        0.842      0.842
+               4                 {'k': 51}       0.827        0.846      0.847
+      fixed configuration {'k': 21}: outer CV 0.840 +- 0.008; untouched test 0.813
+      best inner-CV score (mean of the 5 maxima):  0.833
+      nested outer-fold estimate:                0.840 +- 0.008
+      final model (selected on all dev data: {'k': 21}, inner best 0.836): untouched test 0.813
+
+    RBF SVM, grouped splits (208 s)
+      outer fold                  selected  best inner  outer score  fixed cfg
+               0   {'C': 10, 'gamma': 0.1}       0.809        0.822      0.799
+               1   {'C': 10, 'gamma': 0.1}       0.817        0.828      0.806
+               2   {'C': 10, 'gamma': 0.1}       0.832        0.835      0.815
+               3  {'C': 100, 'gamma': 0.1}       0.821        0.849      0.830
+               4   {'C': 10, 'gamma': 0.1}       0.794        0.820      0.803
+      fixed configuration {'C': 1, 'gamma': 1}: outer CV 0.811 +- 0.011; untouched test 0.814
+      best inner-CV score (mean of the 5 maxima):  0.814
+      nested outer-fold estimate:                0.831 +- 0.011
+      final model (selected on all dev data: {'C': 10, 'gamma': 0.1}, inner best 0.810): untouched test 0.825
+
+    RBF SVM, ungrouped splits (210 s)
+      outer fold                  selected  best inner  outer score  fixed cfg
+               0  {'C': 100, 'gamma': 0.1}       0.850        0.840      0.816
+               1  {'C': 100, 'gamma': 0.1}       0.853        0.834      0.825
+               2  {'C': 100, 'gamma': 0.1}       0.843        0.859      0.844
+               3  {'C': 100, 'gamma': 0.1}       0.847        0.852      0.835
+               4  {'C': 100, 'gamma': 0.1}       0.843        0.867      0.852
+      fixed configuration {'C': 1, 'gamma': 1}: outer CV 0.834 +- 0.013; untouched test 0.814
+      best inner-CV score (mean of the 5 maxima):  0.847
+      nested outer-fold estimate:                0.850 +- 0.012
+      final model (selected on all dev data: {'C': 100, 'gamma': 0.3}, inner best 0.848): untouched test 0.809
+
+  Selection optimism ('winner's curse'): KNN over 14 values of k, grouped 3-fold CV on a random subset of development images;
+  the same fold models are then scored on the development images outside the subset (independent images, same training size)
+      subset  repeats  best CV score  its external  gap, chosen k  gap, avg over all k  selection optimism
+       10 im       60         0.7638        0.7408        +0.0230              +0.0149   +0.0081 +- 0.0014
+       25 im       40         0.7915        0.7827        +0.0088              +0.0057   +0.0031 +- 0.0006
+    gap = CV score - external score. 'avg over all k' is the CV bias with no selection involved; the selection optimism is the extra gap of the chosen k (+- standard error).
+    Training-size effect, for comparison: in nested CV the inner models see ~53% of the development images, outer models ~80%.
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-5\outputs\exp_b_cross_validation.png
+
+==============================================================================================================
+Experiment C: learning curves, validation curves, selection stability (metric: ROC AUC)
+
+  Part 1 - learning curves: training images N, 10 held-out images, 10 repeats (mean train AUC / held-out AUC +- sd)
+     N images  ~cands              logistic                   KNN               RBF SVM                  tree
+            5     777  0.707 / 0.645+-0.024  0.874 / 0.742+-0.025  0.919 / 0.720+-0.029  0.931 / 0.710+-0.021
+           10    1514  0.696 / 0.648+-0.028  0.880 / 0.760+-0.017  0.905 / 0.740+-0.025  0.905 / 0.754+-0.025
+           20    3039  0.681 / 0.639+-0.027  0.881 / 0.788+-0.014  0.889 / 0.773+-0.016  0.879 / 0.779+-0.019
+           30    4544  0.675 / 0.648+-0.022  0.877 / 0.802+-0.013  0.880 / 0.789+-0.015  0.867 / 0.801+-0.011
+           40    6079  0.672 / 0.648+-0.020  0.874 / 0.806+-0.011  0.873 / 0.795+-0.015  0.862 / 0.804+-0.014
+
+    Same candidate budget (~1514 candidates): from 10 whole images vs spread over 40 images (held-out AUC, mean +- sd)
+      logistic   10 images 0.648 +- 0.028   40 images 0.649 +- 0.022   gain +0.001 (40 better in 50% of repeats)
+      KNN        10 images 0.760 +- 0.017   40 images 0.789 +- 0.009   gain +0.029 (40 better in 90% of repeats)
+      RBF SVM    10 images 0.740 +- 0.025   40 images 0.771 +- 0.016   gain +0.030 (40 better in 90% of repeats)
+      tree       10 images 0.754 +- 0.025   40 images 0.773 +- 0.020   gain +0.020 (40 better in 80% of repeats)
+
+  Part 2 - validation curves, StratifiedGroupKFold(5): mean AUC +- fold sd
+    KNN: 1: 0.679+-0.006, 3: 0.765+-0.007, 5: 0.789+-0.008, 11: 0.808+-0.013, 21: 0.818+-0.011, 51: 0.818+-0.012, 101: 0.812+-0.014, 201: 0.799+-0.019
+    tree: 2: 0.736+-0.022, 3: 0.777+-0.020, 4: 0.798+-0.012, 6: 0.811+-0.015, 8: 0.794+-0.010, 10: 0.765+-0.012, 15: 0.699+-0.013, None: 0.660+-0.015
+    RBF SVM (rows C, columns gamma):
+                          0.03             0.1             0.3               1               3
+         C=0.1    0.750+-0.030    0.789+-0.016    0.806+-0.013    0.798+-0.011    0.779+-0.013
+           C=1    0.787+-0.019    0.819+-0.011    0.821+-0.010    0.811+-0.011    0.780+-0.014
+          C=10    0.815+-0.011    0.831+-0.010    0.827+-0.013    0.810+-0.012    0.742+-0.018
+         C=100    0.831+-0.013    0.829+-0.013    0.829+-0.009    0.784+-0.011    0.714+-0.022
+
+  Part 3 - selection repeated on 10 independent development sets (50 images each); selected model scored on the untouched test set
+     dataset                               KNN                           RBF SVM                              tree
+           0                   {'k': 51} 0.812     {'C': 10, 'gamma': 0.1} 0.813                {'depth': 6} 0.798
+           1                   {'k': 51} 0.808    {'C': 100, 'gamma': 0.1} 0.806                {'depth': 6} 0.802
+           2                   {'k': 51} 0.810     {'C': 10, 'gamma': 0.1} 0.810                {'depth': 6} 0.802
+           3                   {'k': 51} 0.820     {'C': 10, 'gamma': 0.1} 0.824                {'depth': 4} 0.796
+           4                   {'k': 51} 0.811     {'C': 10, 'gamma': 0.1} 0.814                {'depth': 6} 0.810
+           5                   {'k': 51} 0.822     {'C': 10, 'gamma': 0.1} 0.820                {'depth': 4} 0.793
+           6                   {'k': 51} 0.825     {'C': 10, 'gamma': 0.1} 0.821                {'depth': 6} 0.810
+           7                   {'k': 51} 0.819     {'C': 10, 'gamma': 0.1} 0.824                {'depth': 6} 0.802
+           8                   {'k': 51} 0.824      {'C': 1, 'gamma': 0.1} 0.825                {'depth': 6} 0.802
+           9                   {'k': 51} 0.809     {'C': 10, 'gamma': 0.1} 0.816                {'depth': 6} 0.785
+    selection frequency:
+      KNN     {'k': 51} x10
+      RBF SVM {'C': 10, 'gamma': 0.1} x8, {'C': 1, 'gamma': 0.1} x1, {'C': 100, 'gamma': 0.1} x1
+      tree    {'depth': 6} x8, {'depth': 4} x2
+
+    family      CV best  test AUC  sd over datasets  per-image AUC  per-image sd  worst-10% image
+    KNN           0.822     0.816            0.0062          0.824         0.073            0.729
+    RBF SVM       0.831     0.817            0.0060          0.824         0.082            0.713
+    tree          0.808     0.800            0.0072          0.803         0.081            0.685
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-5\outputs\exp_c_learning_validation_curves.png
+
+==============================================================================================================
+Experiment D: thresholds, calibration, uncertainty (invariant features)
+  fit images 30 (4627 candidates), calibration images 20 (2989), untouched test images 30 (4631)
+
+  Part 1 - thresholds chosen on the calibration images (Platt probabilities), evaluated on the untouched test images
+
+    KNN k=51: Policy A threshold 0.19, Policy B threshold 0.76
+      policy  split           recall  precision    FPR  target met  images meeting target
+      A       calibration      0.955      0.546  0.528        True                   65%
+      A       test             0.934      0.490  0.541       False                   70%
+      B       calibration      0.240      0.914  0.015        True                   60%
+      B       test             0.259      0.860  0.024       False                   43%
+      (if thresholds were tuned ON the test set: A 0.15, B 0.80 - the targets would be met by construction, which says nothing about new images)
+
+    tree d=6: Policy A threshold 0.23, Policy B threshold 0.72 (precision target not reachable on calibration images)
+      policy  split           recall  precision    FPR  target met  images meeting target
+      A       calibration      0.951      0.526  0.571        True                   60%
+      A       test             0.917      0.479  0.556       False                   53%
+      B       calibration      0.233      0.891  0.019       False                   65%
+      B       test             0.226      0.854  0.022       False                   50%
+      (if thresholds were tuned ON the test set: A 0.13, B 0.80 - the targets would be met by construction, which says nothing about new images)
+
+  Part 2 - native vs calibrated probabilities on the untouched test images
+    model     probabilities    Brier  log loss    ECE   ECE by condition (low / mid / high defocus)   ECE by sky (low / mid / high)
+    KNN k=51  native          0.1618    0.5011  0.014                         0.063 / 0.044 / 0.027           0.039 / 0.052 / 0.068
+    KNN k=51  platt           0.1638    0.4869  0.039                         0.092 / 0.029 / 0.033           0.067 / 0.078 / 0.037
+    KNN k=51  isotonic        0.1646    0.4919  0.041                         0.096 / 0.040 / 0.035           0.069 / 0.078 / 0.037
+    tree d=6  native          0.1714    0.8106  0.054                         0.153 / 0.040 / 0.045           0.095 / 0.081 / 0.071
+    tree d=6  platt           0.1717    0.5252  0.043                         0.140 / 0.071 / 0.035           0.081 / 0.087 / 0.062
+    tree d=6  isotonic        0.1694    0.5165  0.040                         0.135 / 0.032 / 0.056           0.076 / 0.084 / 0.052
+
+    Strict nested evaluation (grouped 5-fold): inside each outer-training portion, 70% of its images fit the KNN, 30% calibrate it and choose thresholds; outer fold scored once
+       fold  ECE native  ECE Platt  thr A  recall@A  thr B  prec@B
+          0       0.039      0.047   0.14     0.972   0.76   0.973
+          1       0.036      0.037   0.16     0.961   0.75   0.877
+          2       0.025      0.024   0.15     0.950   0.81   0.901
+          3       0.035      0.069   0.19     0.952   0.79   0.774
+          4       0.028      0.047   0.17     0.976   0.76   0.869
+      mean        0.032      0.045            0.962          0.879   (recall >= 0.95 in 80% of folds, precision >= 0.90 in 40%)
+
+  Part 3 - bootstrap 95% intervals on the untouched test set (2000 resamples), Platt probabilities, frozen thresholds
+    model     policy metric      point    group bootstrap CI  width    naive (candidate) CI  width  P(target met)
+    KNN k=51  A      recall      0.934        [0.900, 0.961]  0.061          [0.921, 0.945]  0.024            15%
+    KNN k=51  A      precision   0.490        [0.431, 0.549]  0.119          [0.472, 0.508]  0.036              -
+    KNN k=51  A      FPR         0.541        [0.501, 0.576]  0.076          [0.523, 0.559]  0.036              -
+    KNN k=51  B      recall      0.259        [0.226, 0.287]  0.062          [0.239, 0.281]  0.042              -
+    KNN k=51  B      precision   0.860        [0.799, 0.910]  0.111          [0.828, 0.890]  0.062             6%
+    KNN k=51  B      FPR         0.024        [0.016, 0.031]  0.014          [0.018, 0.029]  0.011              -
+    tree d=6  A      recall      0.917        [0.867, 0.955]  0.088          [0.904, 0.930]  0.027             6%
+    tree d=6  A      precision   0.479        [0.418, 0.538]  0.120          [0.461, 0.497]  0.035              -
+    tree d=6  A      FPR         0.556        [0.511, 0.595]  0.084          [0.539, 0.574]  0.035              -
+    tree d=6  B      recall      0.226        [0.195, 0.255]  0.060          [0.206, 0.246]  0.040              -
+    tree d=6  B      precision   0.854        [0.779, 0.910]  0.131          [0.821, 0.886]  0.065             7%
+    tree d=6  B      FPR         0.022        [0.014, 0.030]  0.016          [0.017, 0.027]  0.010              -
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-5\outputs\exp_d_calibration_bootstrap.png
+
+==============================================================================================================
+Experiment E: noise, shift and failure analysis (30 new images per scenario; thresholds frozen)
+  KNN k=51 [inv 3]: Policy A threshold 0.19, Policy B threshold 0.76
+  tree d=6 [inv 3]: Policy A threshold 0.23, Policy B threshold 0.72
+  KNN k=51 [all 5]: Policy A threshold 0.19, Policy B threshold 0.83
+
+  KNN k=51 [inv 3]
+    scenario           P(star)    AUC recall A  prec A  FPR A recall B  prec B  FPR B    ECE outside inv outside all
+    nominal              0.375  0.813    0.946   0.493  0.584    0.256   0.834  0.031  0.039        2.0%        4.1%
+    noise x1.5           0.401  0.746    0.861   0.523  0.526    0.190   0.836  0.025  0.098        4.5%       10.7%
+    noise x2             0.386  0.698    0.804   0.488  0.532    0.170   0.720  0.042  0.128        6.3%        7.7%
+    noise x3             0.415  0.625    0.663   0.484  0.501    0.117   0.606  0.054  0.228       16.0%       19.5%
+    pixel noise x3 only   0.449  0.803    0.918   0.594  0.513    0.196   0.875  0.023  0.068        3.0%       10.7%
+    defocus x1.2         0.373  0.821    0.946   0.503  0.557    0.245   0.881  0.020  0.039        2.3%        9.0%
+    defocus x1.4         0.375  0.779    0.920   0.502  0.549    0.211   0.841  0.024  0.066        2.5%        3.6%
+    defocus x1.7         0.413  0.709    0.863   0.522  0.555    0.147   0.832  0.021  0.121        3.5%        9.6%
+    defocus x2           0.445  0.665    0.810   0.536  0.562    0.110   0.753  0.029  0.171        4.3%        4.9%
+    background x3        0.432  0.809    0.908   0.581  0.498    0.209   0.890  0.020  0.060        2.4%       56.1%
+    background x10       0.393  0.779    0.915   0.514  0.559    0.208   0.850  0.024  0.055        2.7%      100.0%
+    rare stars 5%        0.054  0.841    0.955   0.090  0.553    0.305   0.424  0.024  0.241        1.8%        2.5%
+    rare stars 1%        0.010  0.850    1.000   0.017  0.564    0.244   0.081  0.027  0.277        1.4%       11.2%
+    unseen artifacts     0.388  0.800    0.970   0.472  0.687    0.303   0.828  0.040  0.081        1.5%       13.5%
+
+  tree d=6 [inv 3]
+    scenario           P(star)    AUC recall A  prec A  FPR A recall B  prec B  FPR B    ECE outside inv outside all
+    nominal              0.375  0.784    0.925   0.477  0.609    0.234   0.803  0.034  0.049        2.0%        4.1%
+    noise x1.5           0.401  0.740    0.870   0.518  0.543    0.214   0.808  0.034  0.080        4.5%       10.7%
+    noise x2             0.386  0.706    0.843   0.482  0.571    0.221   0.720  0.054  0.106        6.3%        7.7%
+    noise x3             0.415  0.667    0.765   0.493  0.559    0.280   0.734  0.072  0.157       16.0%       19.5%
+    pixel noise x3 only   0.449  0.792    0.920   0.590  0.523    0.175   0.849  0.025  0.073        3.0%       10.7%
+    defocus x1.2         0.373  0.803    0.948   0.495  0.576    0.236   0.857  0.023  0.045        2.3%        9.0%
+    defocus x1.4         0.375  0.768    0.933   0.493  0.577    0.189   0.792  0.030  0.054        2.5%        3.6%
+    defocus x1.7         0.413  0.694    0.859   0.515  0.569    0.113   0.773  0.023  0.108        3.5%        9.6%
+    defocus x2           0.445  0.647    0.793   0.523  0.580    0.107   0.783  0.024  0.151        4.3%        4.9%
+    background x3        0.432  0.786    0.894   0.563  0.526    0.192   0.865  0.023  0.066        2.4%       56.1%
+    background x10       0.393  0.771    0.924   0.504  0.587    0.170   0.825  0.023  0.049        2.7%      100.0%
+    rare stars 5%        0.054  0.825    0.935   0.085  0.576    0.260   0.362  0.026  0.252        1.8%        2.5%
+    rare stars 1%        0.010  0.809    0.933   0.015  0.590    0.222   0.096  0.021  0.288        1.4%       11.2%
+    unseen artifacts     0.388  0.779    0.974   0.467  0.705    0.260   0.859  0.027  0.072        1.5%       13.5%
+
+  KNN k=51 [all 5]
+    scenario           P(star)    AUC recall A  prec A  FPR A recall B  prec B  FPR B    ECE outside inv outside all
+    nominal              0.375  0.785    0.954   0.472  0.640    0.118   0.927  0.006  0.037        2.0%        4.1%
+    noise x1.5           0.401  0.724    0.878   0.499  0.589    0.071   0.934  0.003  0.073        4.5%       10.7%
+    noise x2             0.386  0.692    0.835   0.478  0.574    0.061   0.706  0.016  0.106        6.3%        7.7%
+    noise x3             0.415  0.627    0.728   0.494  0.529    0.043   0.600  0.021  0.190       16.0%       19.5%
+    pixel noise x3 only   0.449  0.782    0.914   0.586  0.528    0.078   0.852  0.011  0.077        3.0%       10.7%
+    defocus x1.2         0.373  0.796    0.960   0.472  0.640    0.089   0.945  0.003  0.028        2.3%        9.0%
+    defocus x1.4         0.375  0.786    0.949   0.473  0.635    0.133   0.945  0.005  0.035        2.5%        3.6%
+    defocus x1.7         0.413  0.707    0.904   0.503  0.627    0.079   0.935  0.004  0.084        3.5%        9.6%
+    defocus x2           0.445  0.654    0.869   0.518  0.648    0.052   0.828  0.009  0.133        4.3%        4.9%
+    background x3        0.432  0.677    0.774   0.523  0.536    0.002   0.571  0.001  0.157        2.4%       56.1%
+    background x10       0.393  0.644    0.437   0.549  0.232    0.000     nan  0.000  0.255        2.7%      100.0%
+    rare stars 5%        0.054  0.799    0.943   0.080  0.620    0.089   0.415  0.007  0.257        1.8%        2.5%
+    rare stars 1%        0.010  0.804    0.956   0.014  0.646    0.133   0.214  0.005  0.310        1.4%       11.2%
+    unseen artifacts     0.388  0.751    0.980   0.447  0.770    0.118   0.903  0.008  0.095        1.5%       13.5%
+
+  Acceptance rate by subtype at Policy A (KNN k=51 [inv 3]); stars: want high, artifacts: want low
+    scenario             bright star    faint star     hot pixel       diffuse    noise peakcompact irregular         ghost
+    nominal                     0.93          0.95          0.19          0.49          0.83          0.42             -
+    noise x1.5                  0.90          0.85          0.21          0.49          0.79          0.36             -
+    noise x2                    0.88          0.79          0.22          0.51          0.75          0.40             -
+    noise x3                    0.82          0.64          0.21          0.53          0.69          0.40             -
+    pixel noise x3 only          0.94          0.92          0.19          0.49          0.84          0.38             -
+    defocus x1.2                0.99          0.94          0.14          0.51          0.84          0.34             -
+    defocus x1.4                0.99          0.91          0.16          0.52          0.84          0.35             -
+    defocus x1.7                0.93          0.85          0.16          0.53          0.83          0.39             -
+    defocus x2                  0.86          0.80          0.16          0.49          0.86          0.39             -
+    background x3               0.91          0.91          0.16          0.49          0.81          0.32             -
+    background x10              0.99          0.90          0.18          0.52          0.84          0.37             -
+    rare stars 5%               0.96          0.95          0.17          0.51          0.85          0.35             -
+    rare stars 1%               1.00          1.00          0.18          0.50          0.83          0.37             -
+    unseen artifacts            0.99          0.96          0.16          0.54          0.85          0.36          0.94
+
+  Failure report (KNN k=51 [inv 3], Policy A): errors per 1000 candidates by source subtype, and the change vs nominal
+    scenario            FP/1000  FN/1000   largest contributors to the change vs nominal
+    nominal               365.0     20.2   +FP hot pixel +0, +FP diffuse +0, +FP noise peak +0
+    noise x1.5            315.3     55.6   +FP noise peak -45, +FN faint star +34, +FP diffuse -13
+    noise x2              326.1     75.6   +FN faint star +54, +FP noise peak -47, +FP hot pixel +8
+    noise x3              292.8    140.1   +FN faint star +116, +FP noise peak -75, +FP diffuse -10
+    pixel noise x3 only    282.5     36.8   +FP noise peak -79, +FN faint star +19, +FP diffuse -10
+    defocus x1.2          349.3     20.2   +FP diffuse -9, +FP compact irregular -7, +FN bright star -4
+    defocus x1.4          342.7     30.0   +FP noise peak -25, +FN faint star +15, +FN bright star -5
+    defocus x1.7          326.3     56.6   +FN faint star +37, +FP noise peak -31, +FP compact irregular -7
+    defocus x2            312.0     84.5   +FN faint star +62, +FP noise peak -50, +FP hot pixel -6
+    background x3         282.8     39.8   +FP noise peak -61, +FN faint star +18, +FP compact irregular -14
+    background x10        339.7     33.5   +FP noise peak -27, +FN faint star +18, +FP compact irregular +8
+    rare stars 5%         523.0      2.4   +FP noise peak +99, +FP compact irregular +32, +FP diffuse +17
+    rare stars 1%         558.0      0.0   +FP noise peak +123, +FP diffuse +37, +FP compact irregular +19
+    unseen artifacts      420.4     11.6   +FP ghost +202, +FP noise peak -106, +FP diffuse -21
+    (FP per 1000 candidates depends on the subtype mix of the scenario; for rare stars the drop in FN is just fewer stars, and the precision collapse appears in the table above)
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-5\outputs\exp_e_shift_failure.png
+

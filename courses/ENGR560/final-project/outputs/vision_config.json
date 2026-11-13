@@ -1,0 +1,64 @@
+{
+  "detection_mode": "hybrid",
+  "verify_solution": true,
+  "offline": true,
+  "deterministic": true,
+  "camera": {
+    "width": 512,
+    "height": 512,
+    "focal_length_px": 6875.493541569879,
+    "cx": 255.5,
+    "cy": 255.5,
+    "psf_fwhm_px": 3.0,
+    "focal_length_tolerance": 0.03,
+    "name": "module13-synthetic"
+  },
+  "calibration": {
+    "version": "m11-m12-synthetic-2026.1",
+    "read_noise_e": 5.0,
+    "gain_e_per_adu": 1.0,
+    "bias_adu": 0.0,
+    "dark_frame": null,
+    "flat_field": null,
+    "uncertainty_scale": 1.118
+  },
+  "detection": {
+    "k_sigma": 5.0,
+    "min_sep_px": 4.0,
+    "window_px": 5,
+    "fwhm_assumed_px": null,
+    "fit_half_width_px": 5,
+    "post_fit_reject": [
+      "SHARP",
+      "FIT_FAILED"
+    ],
+    "cnn_checkpoint": "cnn_best.pt",
+    "cnn_threshold": null
+  },
+  "solver": {
+    "catalog": "catalog_m13.npz",
+    "search_center_radec_deg": [
+      150.0,
+      20.0
+    ],
+    "search_radius_deg": 2.5,
+    "tolerance_sigma_px": 0.2,
+    "k_det": 14,
+    "max_hypotheses": 20000,
+    "precheck_min_matches": 6,
+    "polish_iterations": 50,
+    "mag_limit": null
+  },
+  "acceptance": {
+    "min_sources": 5,
+    "min_verify_matches": 6,
+    "min_catalog_fraction": 0.5,
+    "max_reduced_chi2": 5.0,
+    "max_rms_px": 1.5,
+    "max_roll_sigma_arcsec": 200.0,
+    "max_cross_sigma_arcsec": 6.0,
+    "ambiguity_ratio": 0.8,
+    "distinct_hypothesis_deg": 0.25,
+    "focal_bound_margin": 0.002
+  }
+}

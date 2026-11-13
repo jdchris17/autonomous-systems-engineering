@@ -1,0 +1,150 @@
+====================================================================================================
+Experiment A: gradient-descent engine checks
+  cubic, 4 parameters: status=converged, iterations=1116, theta=[ 0.9854 -2.0282  0.5282  3.0375], |theta - theta_ref| = 3.04e-07
+  [PASS] more than two parameters (4-parameter cubic converges to normal-equation solution)
+  [PASS] trajectory recorded: len(theta_history) == len(loss_history) == iterations + 1
+  [PASS] loss history is non-increasing for a stable learning rate
+  [PASS] initial parameter array left unchanged
+  [PASS] 6-parameter model converges (51 iterations, |error| = 5.1e-09)
+  [PASS] divergence detected as 'nonfinite' after 91 updates (last finite loss 2.31e+304)
+  [PASS] iteration limit reported as 'max_iterations' (gradient norm still 1.05e-01)
+  7/7 checks passed
+
+====================================================================================================
+Experiment B: gradient descent (eta = 0.05, start [0, 0]) vs least squares, N = 30
+  stop: converged after 205 updates, final ||grad|| = 9.44e-09
+  quantity                      gradient descent  direct least squares
+  learned intercept                 2.9064119268          2.9064119318
+  learned slope                     1.9644254964          1.9644254969
+  final training MSE                1.7731784943          1.7731784943
+  parameter difference norm             5.02e-09                     -
+  agreement within 1e-4: True
+  first iteration within distance d of the LS solution: d=0.1: 35, d=0.01: 59, d=0.0001: 105, d=1e-06: 152
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-2\outputs\exp_b_gd_vs_lstsq.png
+
+====================================================================================================
+Experiment C: relative discrepancy E between analytical and central-difference gradients
+  problem               theta                        h=0.01   h=0.0001    h=1e-06    h=1e-08
+  ------------------------------------------------------------------------------------------
+  MSE, line (p=2)       zeros                      1.15e-14   1.95e-12   1.56e-10   8.79e-09
+  MSE, line (p=2)       least-squares optimum      1.60e-14   3.50e-12   6.25e-15   1.57e-08
+  MSE, line (p=2)       random A                   2.49e-14   1.02e-12   1.26e-10   1.12e-08
+  MSE, line (p=2)       random B (large)           2.89e-13   3.49e-11   3.14e-09   1.23e-07
+  MSE, cubic (p=4)      zeros                      9.06e-16   1.45e-13   1.72e-11   2.14e-09
+  MSE, cubic (p=4)      random                     1.87e-14   2.13e-12   1.36e-10   1.77e-08
+  log-cosh, line (p=2)  zeros                      9.73e-06   9.71e-10   4.33e-11   2.74e-08
+  log-cosh, line (p=2)  random                     6.74e-07   6.89e-11   4.61e-10   2.40e-08
+
+  Bug detection at theta = [1, 0.5], h = 1e-5:
+    correct (2/N) X^T r              E = 1.17e-11   OK
+    bug: dropped factor 2            E = 5.00e-01   FAILS CHECK
+    bug: sign of residual flipped    E = 2.00e+00   FAILS CHECK
+    bug: only last example used      E = 4.56e-01   FAILS CHECK
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-2\outputs\exp_c_gradient_check.png
+
+====================================================================================================
+D Part 1: learning-rate comparison (original x, budget 5000 updates)
+     eta     status  updates     final loss  |theta - LS|  rho(eta)  predicted
+   0.001  hit limit     5000        1.77318      0.000252    0.9981      11570
+    0.01  converged     1064        1.77318      5.24e-09    0.9812       1147
+    0.05  converged      205        1.77318      5.02e-09    0.9060        221
+     0.1  converged       97        1.77318      5.21e-09    0.8120        105
+     0.5   DIVERGED      178            inf     1.32e+153    7.2267        inf
+  least-squares loss J* = 1.7731784943
+
+D Part 2: Hessian eigenvalue analysis
+  H = (2/N) X^T X = [[ 2.     -1.3192]
+ [-1.3192 16.333 ]]
+  eigenvalues: lambda_min = 1.8796, lambda_max = 16.4534,  condition number kappa = 8.754
+  largest stable constant learning rate: eta < 2/lambda_max = 0.12156
+  fastest constant learning rate eta* = 2/(lambda_min+lambda_max) = 0.10909,  rho* = 0.7949 = (kappa-1)/(kappa+1)
+  check eta = 0.98 x limit = 0.11912: converged after 533 updates
+  check eta = 1.02 x limit = 0.12399: DIVERGED after 8965 updates
+  fine sweep: fewest updates = 90 at eta = 0.1071 (theory eta* = 0.1091)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-2\outputs\exp_d_learning_rates.png
+
+D Part 3: feature scaling (targets unchanged; standardization uses TRAINING mean/std)
+  training stats of 100x: mean = -65.960, std = 278.055
+  representation   lambda_min   lambda_max       kappa   eta limit        eta*      rho*
+  original x             1.88        16.45       8.754      0.1216      0.1091  0.794950
+  scaled 100x           1.893    1.633e+05   8.626e+04   1.225e-05   1.224e-05  0.999977
+  standardized              2            2           1           1         0.5  0.000000
+
+  representation       eta     status  updates  |theta-LS|  intercept  slope (x)   test MSE
+  original x         0.001  hit limit     5000    0.000252    2.90616    1.96440    1.99091
+  original x          0.01  converged     1064    5.24e-09    2.90641    1.96443    1.99086
+  original x          0.05  converged      205    5.02e-09    2.90641    1.96443    1.99086
+  original x           0.1  converged       97    5.21e-09    2.90641    1.96443    1.99086
+  original x           0.5   DIVERGED      178           -          -          -          -
+  original x        LS ref                                    2.90641    1.96443    1.99086
+  scaled 100x        0.001   DIVERGED       70           -          -          -          -
+  scaled 100x         0.01   DIVERGED       48           -          -          -          -
+  scaled 100x         0.05   DIVERGED       40           -          -          -          -
+  scaled 100x          0.1   DIVERGED       37           -          -          -          -
+  scaled 100x          0.5   DIVERGED       32           -          -          -          -
+  scaled 100x      1.1e-05  hit limit     5000        2.62    0.28795    1.75293    9.63426
+  scaled 100x       LS ref                                    2.90641    1.96443    1.99086
+  standardized       0.001  hit limit     5000    0.000256    2.90628    1.96434    1.99089
+  standardized        0.01  converged     1033    4.92e-09    2.90641    1.96443    1.99086
+  standardized        0.05  converged      198    4.96e-09    2.90641    1.96443    1.99086
+  standardized         0.1  converged       94    4.43e-09    2.90641    1.96443    1.99086
+  standardized         0.5  converged        1    9.16e-16    2.90641    1.96443    1.99086
+  standardized      LS ref                                    2.90641    1.96443    1.99086
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-2\outputs\exp_d_feature_scaling.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-2\outputs\exp_d_scaling_paths.png
+
+====================================================================================================
+Experiment E: N = 5000, start [0, 0], 5 seeds; controlled comparison at eta = 0.02, plus two extra runs
+  Excess full-dataset loss J(theta) - J*  and  |theta - theta_LS|   (mean +- std over seeds)
+
+  after 1 epoch = 5,000 examples:
+    method                   updates    examples                  J - J*            |theta - LS|
+    batch (5000)                   1       5,000     2.306e+01 +- 1.5e-01     3.177e+00 +- 2.5e-02
+    mini-batch (16)              313       5,000     4.060e-02 +- 2.3e-02     7.250e-02 +- 2.2e-02
+    stochastic (1)             5,000       5,000     6.248e-01 +- 6.1e-01     3.181e-01 +- 1.2e-01
+    batch, eta=0.1                 1       5,000     2.009e+01 +- 8.8e-01     2.738e+00 +- 1.6e-02
+    stochastic, eta=0.002      5,000       5,000     3.952e-02 +- 2.8e-02     7.376e-02 +- 2.7e-02
+
+  after 20 epochs = 100,000 examples:
+    method                   updates    examples                  J - J*            |theta - LS|
+    batch (5000)                  20     100,000     1.762e+00 +- 3.5e-02     1.327e+00 +- 1.3e-02
+    mini-batch (16)            6,250      99,848     1.723e-02 +- 1.0e-02     6.275e-02 +- 1.8e-02
+    stochastic (1)           100,000     100,000     5.997e-01 +- 5.8e-01     3.470e-01 +- 1.0e-01
+    batch, eta=0.1                20     100,000     1.204e-03 +- 2.3e-05     3.465e-02 +- 3.5e-04
+    stochastic, eta=0.002    100,000     100,000     3.515e-02 +- 3.0e-02     9.154e-02 +- 4.1e-02
+
+  after 20 updates:
+    method                   updates    examples                  J - J*            |theta - LS|
+    batch (5000)                  20     100,000     1.762e+00 +- 3.5e-02     1.327e+00 +- 1.3e-02
+    mini-batch (16)               20         320     1.943e+00 +- 1.9e-01     1.346e+00 +- 6.3e-02
+    stochastic (1)                20          20     2.756e+00 +- 1.9e+00     1.309e+00 +- 3.5e-01
+    batch, eta=0.1                20     100,000     1.204e-03 +- 2.3e-05     3.465e-02 +- 3.5e-04
+    stochastic, eta=0.002         20          20     1.711e+01 +- 3.2e+00     2.970e+00 +- 1.2e-01
+
+  after 2,000 updates:
+    method                   updates    examples                  J - J*            |theta - LS|
+    batch (5000)               2,000  10,000,000     0.000e+00 +- 2.8e-16     7.110e-15 +- 2.2e-15
+    mini-batch (16)            2,000      31,952     8.328e-03 +- 7.0e-03     4.427e-02 +- 3.5e-02
+    stochastic (1)             2,000       2,000     3.339e-01 +- 1.8e-01     3.073e-01 +- 9.6e-02
+    batch, eta=0.1             2,000  10,000,000     2.665e-16 +- 6.0e-16     5.220e-15 +- 2.4e-15
+    stochastic, eta=0.002      2,000       2,000     8.716e-02 +- 8.1e-02     1.167e-01 +- 5.0e-02
+
+  Reaching J - J* < 0.1: first example count where it happens (median), and fraction of updates in epochs 10-20 spent below it (mean over seeds):
+    batch (5000)                280,000   time below:   0.0%
+    mini-batch (16)                 912   time below:  93.6%
+    stochastic (1)                   50   time below:  22.9%
+    batch, eta=0.1               55,000   time below: 100.0%
+    stochastic, eta=0.002           613   time below:  88.5%
+
+  Mean J - J* over the last 2 epochs of the 20-epoch budget (noise floor):
+    batch (5000)              1.837e+00
+    mini-batch (16)           2.983e-02
+    stochastic (1)            6.087e-01
+    batch, eta=0.1            1.544e-03
+    stochastic, eta=0.002     4.206e-02
+  J* (irreducible training loss, mean over seeds) = 2.2666
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-2\outputs\exp_e_comparison.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-2\outputs\exp_e_batch_vs_full_loss.png
+

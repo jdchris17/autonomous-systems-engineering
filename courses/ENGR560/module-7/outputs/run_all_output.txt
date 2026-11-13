@@ -1,0 +1,344 @@
+==============================================================================================================
+Experiment A: K-means from scratch
+
+  Parts 1-2 - scratch vs sklearn with identical initial centres (lloyd, tol 1e-6)
+    dataset     init        iters (mine/sk)  inertia mine    inertia sk  max |centre diff|  label agreement  ARI vs truth
+    separated   random                7 / 7     1818.0861     1818.0861           2.66e-15           1.0000         0.993
+    separated   k-means++             3 / 3     1818.0861     1818.0861           2.66e-15           1.0000         0.993
+    overlapping random              15 / 15     1503.3480     1503.3480           4.44e-15           1.0000         0.541
+    overlapping k-means++             9 / 9     1503.2294     1503.2294           4.00e-15           1.0000         0.542
+    empty-cluster test: third centre started at (100, 100), far from all data -> 1 empty-cluster repair(s); final cluster sizes [300, 300, 300], ARI 0.993
+
+  Part 3 - initialisation sensitivity (200 initialisations each; 'found best' = within 0.01% of the best inertia, 'distinct' = solutions differing by more than 0.1%)
+    dataset                 K init         best inertia  found best  distinct sols  worst / best  mean iters
+    separated (2-D)         3 random           1818.086       99.5%              2         3.563         5.2
+    separated (2-D)         3 k-means++        1818.086      100.0%              1         1.000         4.1
+    overlapping (2-D)       3 random           1503.212      100.0%              1         1.000        10.4
+    overlapping (2-D)       3 k-means++        1503.212      100.0%              1         1.000        10.5
+    astro features (3-D)    6 random           2014.790       27.5%             15         1.195        24.5
+    astro features (3-D)    6 k-means++        2014.790       29.5%             17         1.325        24.4
+
+  Part 4 - astronomical source features (standardised, development images, labels unused in fitting)
+      K    inertia  silhouette  mean pairwise ARI (20 inits)  ARI vs subtype  ARI vs star/artifact
+      2     5275.0       0.461                         0.906           0.032                 0.024
+      3     3822.4       0.391                         0.922           0.165                 0.047
+      4     2990.4       0.355                         0.834           0.172                 0.059
+      5     2498.1       0.385                         0.672           0.191                 0.049
+      6     2014.8       0.400                         0.664           0.223                 0.054
+      8     1440.9       0.406                         0.758           0.289                 0.102
+     10     1140.0       0.407                         0.789           0.267                 0.097
+
+    Cluster x subtype table, K = 2 (best silhouette)
+       cluster     n  bright star   faint star    hot pixel      diffuse    elongated   noise peak    centre (log w, round, log SNR), std. units
+             0   675           0%          40%          33%           0%           5%          21%                           [-1.49 -1.18 -0.76]
+             1  2307          17%          40%           5%          15%          13%          10%                              [0.44 0.35 0.22]
+
+    Cluster x subtype table, K = 3
+       cluster     n  bright star   faint star    hot pixel      diffuse    elongated   noise peak    centre (log w, round, log SNR), std. units
+             1   641           0%          40%          34%           0%           5%          21%                           [-1.56 -1.2  -0.77]
+             2  1813           0%          46%           5%          18%          17%          13%                           [ 0.54  0.1  -0.14]
+             0   528          75%          18%           6%           1%           0%           0%                              [0.06 1.1  1.41]
+
+    Cluster x subtype table, K = 6
+       cluster     n  bright star   faint star    hot pixel      diffuse    elongated   noise peak    centre (log w, round, log SNR), std. units
+             0    70           0%          29%          53%           0%           0%          19%                           [-1.9   1.55 -0.92]
+             3   517           0%          41%          34%           0%           5%          20%                           [-1.72 -1.49 -0.67]
+             1   731           0%          53%          12%           7%           4%          23%                           [ 0.3  -0.24 -0.65]
+             2  1087          11%          53%           3%          26%           0%           7%                              [0.56 0.75 0.07]
+             5   295           1%           2%           2%           2%          93%           0%                           [ 0.54 -1.    0.73]
+             4   282         100%           0%           0%           0%           0%           0%                              [0.13 1.12 2.12]
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_a_iterations.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_a_curves.png
+
+==============================================================================================================
+Experiment B: Gaussian mixture EM from scratch
+
+  Part 1 - Gaussian log density
+    [PASS] matches scipy multivariate_normal.logpdf for D = 1, 2, 3, 5, 8: max error 2.9e-13
+    [PASS] rejects non-symmetric covariance: covariance is not symmetric
+    [PASS] rejects indefinite covariance: covariance is not positive definite
+    [PASS] rejects contains NaN covariance: covariance contains non-finite values
+    [PASS] rejects singular covariance: covariance is not positive definite
+    ill-conditioned covariances (D = 6): |log density error| vs a long-double eigendecomposition reference
+        condition number   Cholesky (mine)  explicit inverse
+                   1e+02          7.11e-14          7.82e-14
+                   1e+06          3.07e-10          5.39e-10
+                   1e+10          1.98e-06          1.53e-06
+                   1e+13          5.92e-04          5.64e-05
+
+  Parts 2-3 - EM on 6000 draws from a known 3-component mixture
+   diag covariance: converged True in 49 iterations, mean log-likelihood -3.54573
+    [PASS] mixture weights sum to one: sum - 1 = -2.9e-15
+    [PASS] every responsibility vector sums to one: max deviation 1.8e-15
+    [PASS] variances positive: min 0.429
+    [PASS] log-likelihood never decreases: largest decrease 0.0e+00
+   full covariance: converged True in 86 iterations, mean log-likelihood -3.31938
+    [PASS] mixture weights sum to one: sum - 1 = -2.0e-15
+    [PASS] every responsibility vector sums to one: max deviation 8.9e-16
+    [PASS] covariances symmetric positive definite: min eigenvalue 0.214, max asymmetry 0.0e+00, repairs 0
+    [PASS] log-likelihood never decreases: largest decrease 0.0e+00
+   recovery of the known mixture (full covariance, components matched by the Hungarian algorithm):
+      component 0: weight 0.500 -> 0.503; mean [0. 0.] -> [ 0.003 -0.016]; covariance rel. error 0.030
+      component 1: weight 0.200 -> 0.196; mean [3.  0.5] -> [2.99  0.471]; covariance rel. error 0.015
+      component 2: weight 0.300 -> 0.301; mean [1.5 3. ] -> [1.55  2.991]; covariance rel. error 0.013
+    [PASS] fitted log-likelihood >= log-likelihood of the TRUE parameters (MLE): -3.3194 vs -3.3208
+   diagonal model log-likelihood -3.5457 < full -3.3194 - the true covariances are correlated, so 'diag' is misspecified
+
+   agreement with sklearn GaussianMixture from identical initial parameters (tol 1e-10, reg 1e-6):
+    [PASS] full: responsibilities agree: max |diff| 2.2e-05; mean log-likelihood diff 7.6e-11; iterations mine 116, sklearn 116
+    [PASS] diag: responsibilities agree: max |diff| 1.1e-05; mean log-likelihood diff 6.0e-11; iterations mine 65, sklearn 65
+
+  Part 4 - hard (K-means) vs soft (GMM) assignment on the same overlapping data
+    accuracy vs the generating component: K-means 0.796, GMM (argmax) 0.904
+    observations with max responsibility < 0.6: 10.9%; < 0.9: 24.8%
+    calibration of the responsibilities (is a 0.52 really a coin flip?):
+        max responsibility      n  argmax is the true component
+                 0.33-0.50    369                         0.453
+                 0.50-0.60    288                         0.521
+                 0.60-0.70    242                         0.665
+                 0.70-0.80    268                         0.761
+                 0.80-0.90    322                         0.829
+                 0.90-0.99    780                         0.956
+                 0.99-1.00   3731                         0.999
+    K-means labels in that uncertain zone are wrong 57% of the time, with no warning
+
+    Misspecification demo: ONE crescent-shaped population + one compact blob
+        K        BIC   crescent pts with max resp < 0.8   blob pts with max resp < 0.8
+        2     2034.6                               3.3%                           0.0%
+        3      931.5                               2.7%                           0.0%
+        4      547.5                               8.0%                           0.0%
+        5      392.0                              14.0%                           0.0%
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_b_hard_vs_soft.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_b_misspecification.png
+
+==============================================================================================================
+Experiment C: mixture model selection on 2982 development patches (60 images), D = 3
+  Point masses in the measured features: 342 patches (11.5%) sit exactly on the width floor (unresolved), 69 at roundness = 1, 11 failed measurements. A Gaussian component can collapse onto such a spike and gain unbounded likelihood, so selection is run with and without a covariance floor (reg_covar).
+
+  Parts 1-2 - no floor (reg_covar 1e-06): fit on all development patches (best of 5 inits)
+      K   cov  params  formula  sklearn  train LL/obs  init spread        AIC        BIC  converged  min comp. weight
+      1  diag       6        6        6       -4.2568       0.0000    25399.6    25435.7        5/5            1.0000
+      1  full       9        9        9       -4.0482       0.0000    24161.5    24215.5        5/5            1.0000
+      2  diag      13       13       13       -3.6618       0.0000    21864.9    21942.9        5/5            0.1762
+      2  full      19       19       19       -3.5888       0.0000    21441.9    21555.9        5/5            0.1719
+      3  diag      20       20       20       -3.0406       0.3151    18173.9    18294.0        5/5            0.0231
+      3  full      29       29       29       -2.9343       0.4468    17558.4    17732.4        5/5            0.0231
+      4  diag      27       27       27       -2.7337       0.2723    16357.9    16519.9        5/5            0.0231
+      4  full      39       39       39       -2.6986       0.1975    16172.5    16406.5        5/5            0.0231
+      5  diag      34       34       34       -2.5940       0.2617    15538.4    15742.4        5/5            0.0231
+      5  full      49       49       49       -2.3032       0.2218    13834.3    14128.3        5/5            0.0699
+      6  diag      41       41       41       -2.1159       0.4495    12701.0    12947.0        5/5            0.0231
+      6  full      59       59       59       -2.3368       0.0389    14055.0    14409.0        5/5            0.0231
+      8  diag      55       55       55       -1.9729       0.4363    11876.1    12206.1        5/5            0.0231
+      8  full      79       79       79       -1.6921       0.5639    10249.9    10723.9        5/5            0.0121
+     10  diag      69       69       69       -1.7975       0.1648    10858.2    11272.2        5/5            0.0037
+     10  full      99       99       99       -1.6386       0.5905     9970.6    10564.6        5/5            0.0040
+     12  diag      83       83       83       -1.7704       0.1672    10724.8    11222.8        5/5            0.0037
+     12  full     119      119      119       -1.5800       0.6325     9661.0    10375.1        5/5            0.0037
+     15  diag     104      104      104       -1.7347       0.0182    10553.7    11177.8        5/5            0.0037
+     15  full     149      149      149       -1.5643       0.0042     9627.4    10521.4        4/5            0.0037
+
+  Parts 1-2 - resolution floor (reg_covar 0.05): fit on all development patches (best of 5 inits)
+      K   cov  params  formula  sklearn  train LL/obs  init spread        AIC        BIC  converged  min comp. weight
+      1  diag       6        6        6       -4.2586       0.0000    25410.1    25446.1        5/5            1.0000
+      1  full       9        9        9       -4.0516       0.0000    24182.0    24236.0        5/5            1.0000
+      2  diag      13       13       13       -3.7074       0.0000    22136.9    22214.9        5/5            0.1876
+      2  full      19       19       19       -3.6481       0.0000    21795.4    21909.4        5/5            0.1861
+      3  diag      20       20       20       -3.4335       0.0225    20517.7    20637.7        5/5            0.0231
+      3  full      29       29       29       -3.3740       0.0902    20180.4    20354.4        5/5            0.0231
+      4  diag      27       27       27       -3.1800       0.0226    19019.5    19181.5        5/5            0.0231
+      4  full      39       39       39       -3.1673       0.0238    18967.9    19201.9        5/5            0.0992
+      5  diag      34       34       34       -3.0590       0.0314    18311.7    18515.7        5/5            0.0231
+      5  full      49       49       49       -2.9523       0.0584    17705.4    17999.4        5/5            0.0271
+      6  diag      41       41       41       -2.9762       0.0375    17831.9    18077.9        5/5            0.0037
+      6  full      59       59       59       -2.8946       0.0490    17381.2    17735.2        5/5            0.0037
+      8  diag      55       55       55       -2.9042       0.1068    17430.8    17760.8        5/5            0.0037
+      8  full      79       79       79       -2.8570       0.0567    17196.9    17670.9        4/5            0.0037
+     10  diag      69       69       69       -2.8822       0.0016    17327.5    17741.6        5/5            0.0037
+     10  full      99       99       99       -2.8526       0.0043    17211.0    17805.1        2/5            0.0037
+     12  diag      83       83       83       -2.8644       0.0194    17249.4    17747.4        5/5            0.0037
+     12  full     119      119      119       -2.8088       0.0481    16989.7    17703.7        4/5            0.0037
+     15  diag     104      104      104       -2.8588       0.0250    17257.6    17881.6        5/5            0.0006
+     15  full     149      149      149       -2.8261       0.0308    17152.7    18046.8        4/5            0.0002
+
+  Part 3 - grouped 5-fold CV over images: held-out log-likelihood per observation (mean +- sd over folds)
+      K                diag, no floor                full, no floor        diag, resolution floor        full, resolution floor
+      1               -4.2603 +- 0.045               -4.0533 +- 0.060               -4.2619 +- 0.043               -4.0563 +- 0.055
+      2               -3.6694 +- 0.044               -3.5112 +- 0.122               -3.7130 +- 0.034               -3.6545 +- 0.038
+      3               -3.1758 +- 0.126               -2.9753 +- 0.155               -3.3525 +- 0.100               -3.3077 +- 0.084
+      4               -2.9471 +- 0.144               -2.8370 +- 0.139               -3.2128 +- 0.065               -3.1797 +- 0.075
+      5               -2.5134 +- 0.113               -2.3522 +- 0.143               -3.0673 +- 0.051               -2.9646 +- 0.034
+      6               -2.1794 +- 0.165               -2.3649 +- 0.069               -2.9840 +- 0.037               -2.9071 +- 0.034
+      8               -2.0931 +- 0.256               -2.0329 +- 0.326               -2.9135 +- 0.034               -2.8723 +- 0.035
+     10               -1.8235 +- 0.142               -1.6627 +- 0.132               -2.8921 +- 0.040               -2.8616 +- 0.040
+     12               -1.7962 +- 0.136               -1.6258 +- 0.123               -2.8864 +- 0.041               -2.8658 +- 0.034
+     15               -1.7908 +- 0.138               -1.6230 +- 0.156               -2.8858 +- 0.027               -2.8587 +- 0.043
+    no floor: highest CV log-likelihood at K = 15, full
+    resolution floor: highest CV log-likelihood at K = 15, full
+  Selection uses the resolution floor models:
+    highest CV log-likelihood: K = 15, full;  one-standard-error rule (fewest parameters within 1 SE = 0.0191): K = 8, full
+    for comparison - BIC picks K = 8, full; AIC picks K = 12, full
+    SELECTED: K = 8, full covariance -> held-out log-likelihood on the 30 untouched images: -2.8838 per observation (development fit -2.8570)
+
+  Part 4 - what the 8 selected components represent (development patches; labels used only now)
+     comp  weight     n bright star  faint star   hot pixel     diffuse   elongated  noise peak  log10 SNR  size px axis r.  log10 B  PSF sig
+        5   0.415  1278          1%         59%         10%          8%          4%         18%       0.85     1.03    0.87     1.67     1.09
+        6   0.230   649         61%         35%          1%          0%          0%          3%       1.49     1.01    0.90     1.67     1.07
+        1   0.158   473          0%         41%         34%          0%          4%         21%       0.83     0.87    0.90     1.68     1.07
+        7   0.086   258          0%          0%          0%          0%        100%          0%       1.58     1.47    0.17     1.62     1.07
+        3   0.079   231          0%          0%          0%        100%          0%          0%       1.16     3.24    0.79     1.59     1.08
+        2   0.023    69          0%         29%         52%          0%          0%         19%       0.93     0.45    1.00     1.58     1.10
+        4   0.006    13          8%          0%         38%          0%         54%          0%       1.65     1.05    0.20     1.77     1.11
+        0   0.004    11          0%          9%         73%          0%          0%         18%       0.78     0.45    1.00     1.70     0.96
+    association of component membership with each variable (eta^2 = variance explained; AMI for labels):
+      AMI with subtype 0.445, with star/artifact 0.215, with image id 0.003
+      eta^2 log true SNR (bright vs faint)        0.459
+      eta^2 log source size (compact vs diffuse)  0.535
+      eta^2 axis ratio (elongation)               0.638
+      eta^2 log image background                  0.008
+      eta^2 image PSF sigma (focus)               0.006
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_c_model_selection.png
+
+==============================================================================================================
+Experiment D: hierarchical clustering and DBSCAN (standardised log width, roundness, log SNR)
+
+  Part 1 - agglomerative clustering on 800 random development patches, cut at 6 clusters
+    linkage   cluster sizes (largest first)               ARI vs subtype
+    single    [774, 20, 2, 2, 1, 1]                                0.006
+    complete  [415, 203, 151, 20, 9, 2]                            0.139
+    average   [571, 145, 55, 20, 7, 2]                             0.089
+    ward      [333, 173, 137, 75, 62, 20]                          0.201
+    Ward dendrogram cut at different heights:
+        2 clusters (cut below merge height  44.29): ARI vs subtype 0.022
+        3 clusters (cut below merge height  29.00): ARI vs subtype 0.084
+        6 clusters (cut below merge height  16.30): ARI vs subtype 0.201
+       10 clusters (cut below merge height   8.82): ARI vs subtype 0.273
+      Ward, 6 clusters - subtype composition
+         cluster     n bright star  faint star   hot pixel     diffuse   elongated  noise peak
+               6   333         16%         49%          2%         23%          1%          9%
+               4   173          1%         56%         14%          1%          5%         23%
+               1   137          0%         39%         33%          1%          4%         24%
+               3    75          0%          0%          0%          0%        100%          0%
+               2    62        100%          0%          0%          0%          0%          0%
+               5    20          0%         30%         55%          0%          0%         15%
+      single linkage, 6 clusters - chaining
+         cluster     n bright star  faint star   hot pixel     diffuse   elongated  noise peak
+               4   774         15%         40%          9%         10%         11%         13%
+               2    20          0%         30%         55%          0%          0%         15%
+               1     2          0%         50%         50%          0%          0%          0%
+               3     2          0%          0%          0%          0%        100%          0%
+               5     1          0%        100%          0%          0%          0%          0%
+               6     1          0%          0%        100%          0%          0%          0%
+
+  Part 2 - DBSCAN on all 2982 development patches
+       eps  min_samples  clusters   noise  ARI vs subtype  stability (ARI eps vs 1.1 eps)
+      0.15            5        35   30.8%           0.176                           0.772
+      0.15           10        11   59.3%           0.011                           0.606
+      0.15           20         1   87.9%          -0.005                           0.712
+       0.2            5        15   14.2%           0.184                           0.855
+       0.2           10        11   27.6%           0.208                           0.836
+       0.2           20         5   53.7%           0.061                           0.628
+       0.3            5         6    2.9%           0.042                           0.325
+       0.3           10         6    6.7%           0.162                           0.702
+       0.3           20         5   15.4%           0.256                           0.750
+       0.4            5         3    0.7%           0.010                           0.973
+       0.4           10         4    2.0%           0.038                           0.281
+       0.4           20         3    4.7%           0.045                           0.956
+       0.5            5         3    0.3%           0.008                           0.982
+       0.5           10         3    0.7%           0.010                           0.926
+       0.5           20         2    1.8%           0.015                           0.934
+    k-distance heuristic (95th percentile of the 10th-neighbour distance) -> eps = 0.424: 3 clusters, 1.5% noise
+      DBSCAN eps = 0.3, min_samples = 10 - composition
+         cluster     n bright star  faint star   hot pixel     diffuse   elongated  noise peak
+               0  1987         18%         48%          5%         16%          2%         12%
+               2   458          0%         41%         35%          0%          2%         21%
+               4   252          0%          0%          0%          0%        100%          0%
+               1    64          0%         31%         48%          0%          0%         20%
+               3    11          0%          9%         73%          0%          0%         18%
+               5    10        100%          0%          0%          0%          0%          0%
+           noise   200         17%         16%         26%         14%         19%          9%
+
+  Part 3 - geometry stress tests: ARI vs the generating labels (outliers excluded from ARI; DBSCAN noise counted as its own label)
+    dataset                                K-means      GMM (full)            Ward  single linkage          DBSCAN  DBSCAN outlier recall
+    two Gaussian clouds                      0.960           0.968           0.937           0.000          -0.000                      -
+    unequal-variance ellipses                0.912           0.982           0.982          -0.002          -0.025                      -
+    interlocking crescents                   0.489           0.500           0.559           1.000           0.972                      -
+    dense + sparse cluster                   0.699           1.000           0.968           0.040           0.217                      -
+    clusters + isolated outliers             1.000           1.000           1.000           0.000           0.970                    95%
+
+  Part 4 - what DBSCAN (eps 0.3, min_samples 10) calls noise: 200 of 2982 patches
+    subtype         share of all  share of noise  enrichment  noise rate
+    bright star            13.5%           17.0%        1.25        8.4%
+    faint star             40.1%           15.5%        0.39        2.6%
+    hot pixel              11.4%           25.5%        2.23       15.0%
+    diffuse                11.4%           14.0%        1.23        8.3%
+    elongated              11.2%           19.0%        1.70       11.4%
+    noise peak             12.3%            9.0%        0.73        4.9%
+    true SNR of noise points: median 14.7 vs 11.3 overall; 22% are above the 90th SNR percentile, 12% above the 99th
+    bright stars flagged as noise: 34, median true SNR 998
+    noise points on the width floor (unresolved measurement): 4% vs 11% overall; failed measurements among noise: 0
+    faint star  noise vs non-noise medians (log w, roundness, log SNR): [-0.66  0.27  1.44] vs [0.02 0.62 1.94]
+    hot pixel   noise vs non-noise medians (log w, roundness, log SNR): [-0.82  0.45  2.44] vs [-1.61  0.08  1.81]
+    elongated   noise vs non-noise medians (log w, roundness, log SNR): [-0.15  0.08  2.43] vs [0.38 0.18 3.12]
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_d_dendrograms.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_d_stress_tests.png
+
+==============================================================================================================
+Experiment E: unsupervised feature discovery (labels used only after fitting)
+  PCA explained variance of the first 8 / 16 components (development): B 0.978 / 0.982, C 0.067 / 0.098
+
+  Part 3 - external agreement (development patches unless noted)
+    representation            model     clusters  noise    ARI    AMI  purity AMI star/art  stability  test ARI
+    engineered 3              K-means          6   0.0%  0.223  0.377   0.592        0.121      0.657     0.200
+    engineered 3              GMM              6   0.0%  0.202  0.365   0.534        0.176      1.000     0.209
+    engineered 3              DBSCAN           4   3.7%  0.045  0.109   0.404        0.020          -         -
+    PCA-B(8)                  K-means          6   0.0%  0.002  0.005   0.405        0.004      0.531     0.001
+    PCA-B(8)                  GMM              6   0.0%  0.031  0.086   0.443        0.036      0.384     0.025
+    PCA-B(8)                  DBSCAN           1   6.7%  0.050  0.110   0.401        0.022          -         -
+    PCA-B(16)                 K-means          6   0.0%  0.005  0.018   0.411        0.013      0.534     0.004
+    PCA-B(16)                 GMM              6   0.0%  0.049  0.089   0.443        0.001      0.255     0.045
+    PCA-B(16)                 DBSCAN           1   6.3%  0.043  0.082   0.401        0.002          -         -
+    PCA-C(8)                  K-means          6   0.0%  0.020  0.078   0.432        0.032      0.352     0.018
+    PCA-C(8)                  GMM              6   0.0%  0.053  0.185   0.456        0.051      0.780     0.057
+    PCA-C(8)                  DBSCAN          10   3.9%  0.069  0.183   0.446        0.089          -         -
+    PCA-C(16)                 K-means          6   0.0%  0.023  0.108   0.442        0.055      0.219     0.014
+    PCA-C(16)                 GMM              6   0.0%  0.067  0.246   0.461        0.047      0.734     0.061
+    PCA-C(16)                 DBSCAN           6   4.6%  0.046  0.125   0.420        0.066          -         -
+    hybrid (eng 3 + PCA-C 8)  K-means          6   0.0%  0.154  0.319   0.514        0.146      0.589     0.138
+    hybrid (eng 3 + PCA-C 8)  GMM              6   0.0%  0.132  0.274   0.450        0.130      0.487     0.111
+    hybrid (eng 3 + PCA-C 8)  DBSCAN          10   3.8%  0.063  0.167   0.441        0.086          -         -
+    purity reference: 60 RANDOM clusters give purity 0.401 (ARI -0.000); assigning every patch its own cluster gives purity 1.000 - purity alone rewards many small clusters
+
+  Part 4 - what do the K-means clusters track? AMI between cluster membership and each variable
+    representation                         subtype     star / artifact   true SNR quintile  background quintil  focus (PSF sigma)   centroid offset qu            image id
+    engineered 3                             0.377               0.121               0.257               0.001               0.002               0.008               0.003
+    PCA-B(8)                                 0.005               0.004               0.004               0.001               0.001               0.001               0.000
+    PCA-B(16)                                0.018               0.013               0.014               0.001               0.002               0.000               0.000
+    PCA-C(8)                                 0.078               0.032               0.012               0.001               0.001               0.032               0.001
+    PCA-C(16)                                0.108               0.055               0.008               0.001               0.003               0.047               0.003
+    hybrid (eng 3 + PCA-C 8)                 0.319               0.146               0.155              -0.001               0.001               0.037               0.003
+
+  Part 2 - K-means on PCA-B(8): contingency table and standardised engineered-feature means
+     cluster     n bright star  faint star   hot pixel     diffuse   elongated  noise peak  log width  roundness    log SNR  median SNR
+           1  2970         13%         40%         11%         11%         11%         12%      -0.00      -0.00      -0.02        11.2
+           0     6        100%          0%          0%          0%          0%          0%       0.12       1.06       4.57      1573.0
+           2     2        100%          0%          0%          0%          0%          0%       0.13       1.21       5.12      3304.0
+           4     2        100%          0%          0%          0%          0%          0%       0.15       1.08       4.25      1210.1
+           3     1        100%          0%          0%          0%          0%          0%       0.11       1.39       5.61      5640.6
+           5     1        100%          0%          0%          0%          0%          0%      -0.04       1.22       5.49      5365.9
+
+  Part 2 - K-means on engineered 3: contingency table and standardised engineered-feature means
+     cluster     n bright star  faint star   hot pixel     diffuse   elongated  noise peak  log width  roundness    log SNR  median SNR
+           2  1087         11%         53%          3%         26%          0%          7%       0.56       0.75       0.07        13.0
+           1   731          0%         53%         12%          7%          4%         23%       0.30      -0.24      -0.65         6.2
+           3   517          0%         41%         34%          0%          5%         20%      -1.72      -1.49      -0.67         6.8
+           5   295          1%          2%          2%          2%         93%          0%       0.54      -1.00       0.73        36.4
+           4   282        100%          0%          0%          0%          0%          0%       0.13       1.12       2.12        99.2
+           0    70          0%         29%         53%          0%          0%         19%      -1.90       1.55      -0.92         8.6
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_e_cluster_patches_engineered.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_e_cluster_patches_PCA-B8.png
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-7\outputs\exp_e_representations.png
+

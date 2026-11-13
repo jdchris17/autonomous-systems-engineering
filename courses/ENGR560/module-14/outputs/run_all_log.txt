@@ -1,0 +1,103 @@
+==============================================================================================================
+Experiment A: deterministic 5 x 5 grid world, Q-learning (alpha 0.1, gamma 0.95, epsilon 0.2 fixed)
+  layout (S start, G goal, # obstacle):
+    S . . . .
+    . # # # .
+    . # . . .
+    . # . # .
+    . . . # G
+
+  training (3000 episodes, exploration on), 100-episode moving averages:
+    episode   100: success 0.98  return  +7.34  length  17.7
+    episode   250: success 1.00  return  +8.84  length   9.9
+    episode   500: success 1.00  return  +8.76  length  10.3
+    episode  1000: success 1.00  return  +8.84  length   9.8
+    episode  2000: success 1.00  return  +8.83  length  10.5
+    episode  3000: success 1.00  return  +8.76  length  10.2
+  greedy policy first reaches the goal after 30 episodes; greedy path is the 8-move shortest path from episode 30 onwards (checked every 10 episodes)
+
+  frozen greedy policy, 100 evaluation episodes: success 1.00, mean return 9.30, steps to goal 8.0, collisions/episode 0.00
+  learned path: 8 moves  (0,0) (0,1) (0,2) (0,3) (0,4) (1,4) (2,4) (3,4) (4,4)
+  BFS shortest: 8 moves  (0,0) (0,1) (0,2) (0,3) (0,4) (1,4) (2,4) (3,4) (4,4)
+  optimal return along the shortest path: 9.30; learned 9.30
+
+  policy quality over all 17 reachable non-goal cells: 16 choose a shortest-path action, 1 do not: (3,0) ^
+    cell (3,0): BFS distance 9, greedy goes ^ (to distance 10); Q row +0.10 -0.25 -0.25 -0.45; optimal Q* row +5.18 +5.96 +5.56 +4.66
+  max |Q - Q*| on the shortest path's (state, action) pairs: 0.0000
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-14\outputs\exp_a_learning_curve.png and C:\Users\jakec\.claude\sessions\machine_learning\module-14\outputs\exp_a_policy.png
+
+==============================================================================================================
+Experiment B: reward design, discount factor, exploration (alpha 0.1, 3000 episodes)
+
+  seed 0 only (initial comparison):
+    configuration                          success  steps  episodes to target  cells optimal
+    Goal-oriented reward (baseline)           1.00      8          30 [30-30]       16/17
+    Sparse reward                             0.00    nan               never        4/17
+    Low discount factor (gamma 0.5)           1.00      8          40 [40-40]       15/17
+    High discount factor (gamma 0.99)         1.00      8          30 [30-30]       15/17
+    Decaying exploration (1.0 -> 0.01)        1.00      8          30 [30-30]       17/17
+    Sparse + random tie-breaking (extra)      1.00      8          20 [20-20]       15/17
+    Sparse + decaying exploration (extra)     1.00      8          20 [20-20]       15/17
+    Sparse, gamma 1.0, random ties (extra)    1.00      8          20 [20-20]       15/17
+
+  all 5 seeds (frozen greedy policy; deterministic environment, so one evaluation rollout is exact):
+    configuration                          success rate mean steps  episodes to target, median [range] cells optimal train return* collisions*
+    Goal-oriented reward (baseline)                1.00        8.0                          40 [30-40]      14.8/17          8.81         984
+    Sparse reward                                  0.00        nan                               never       4.0/17          0.00        7911
+    Low discount factor (gamma 0.5)                1.00        8.0                          40 [30-50]      13.8/17          8.81        1004
+    High discount factor (gamma 0.99)              1.00        8.0                          40 [30-40]      14.8/17          8.81         982
+    Decaying exploration (1.0 -> 0.01)             1.00        8.0                          30 [20-40]      16.8/17          9.28        1023
+    Sparse + random tie-breaking (extra)           1.00        8.0                          20 [20-20]      14.4/17         10.00        1136
+    Sparse + decaying exploration (extra)          1.00        8.0                          20 [10-20]      14.8/17         10.00         969
+    Sparse, gamma 1.0, random ties (extra)         1.00        8.0                          20 [20-20]      14.4/17         10.00        1136
+    * train return = mean return over the last 500 TRAINING episodes (exploration on; goal-oriented scale except sparse rows); collisions = obstacle bumps during all 3000 training episodes
+
+  discounting: how much does the distant goal still separate the actions? (exact value iteration)
+     gamma  V*(start)  gap at start  gap 1 step from goal  goal term at start  learned gap at start (seed 0)
+       0.5    -0.1203        0.0398                5.1000              0.0781                         0.0398
+      0.95     6.3800        0.4190                0.6000              6.9834                         0.4190
+      0.99     8.6413        0.1864                0.2000              9.3207                         0.1864
+
+  sparse reward, problem-set agent (np.argmax ties -> 'up'), seed 0: Q still exactly 0 in 25 of 25 states; training episodes that reached the goal: 0 of 3000
+  Sparse + random tie-breaking (extra), seed 0: Q(start) = 6.6342 6.3025 6.6342 6.9834; Q one step from goal (3,4) = 9.0250 10.0000 9.5000 9.5000
+  Sparse, gamma 1.0, random ties (extra), seed 0: Q(start) = 10.0000 10.0000 10.0000 10.0000; Q one step from goal (3,4) = 10.0000 10.0000 10.0000 10.0000
+  gamma 1.0: 10 - Q(start) = 8.4e-08 8.3e-07 6.7e-08 5.7e-14 -> the greedy choice rests on <1e-6 leftovers of incomplete convergence (actions on the path already used converge first), not on any preference expressed by the reward
+  exact sparse, gamma 1.0: Q*(start) = 10.0000 10.0000 10.0000 10.0000 -> every action is optimal (all paths that eventually reach the goal are worth 10)
+
+==============================================================================================================
+Experiment C: stochastic transitions (0.8 intended / 0.1 / 0.1), gamma 0.95, 5 seeds, 2000 evaluation episodes
+  value iteration converged in 51 (original) / 59 (changed) sweeps; V*(start) = 4.944 / 2.787
+    VI policy, original:
+      > > > > v
+      ^ # # # v
+      ^ # > > v
+      v # ^ # v
+      > > ^ # G
+    VI policy, changed (0,3) blocked:
+      v < < # v
+      v # # # v
+      v # > > v
+      v # ^ # v
+      > > ^ # G
+  deterministic-world VI policy equals stochastic-world VI policy in 100% of cells
+
+  Part 1/2: original stochastic world (mean +- sd over 5 seeds)
+    policy                                              success    mean return   failure  steps to goal
+    deterministic agent, deterministic world       1.000+-0.000     9.30+-0.00     0.000        8.00
+    deterministic agent, STOCHASTIC world          1.000+-0.000     8.44+-0.03     0.000       10.46
+    stochastic-trained agent, stochastic world     1.000+-0.000     8.44+-0.03     0.000       10.46
+    value iteration, stochastic world              1.000+-0.000     8.44+-0.03     0.000       10.46
+    exact discounted value V(start): optimal 4.944; deterministic agent 4.944 (+-0.000); stochastic agent 4.944 (+-0.000)
+    cells where the Q-learning action is optimal under the true stochastic model: deterministic agent 87%, stochastic agent 93% of all 17; stochastic agent on the 9 cells the optimal policy actually visits: 100%
+
+  Part 3: route blocked at (0, 3) (stochastic world) - REQUIRED COMPARISON (mean +- sd over 5 seeds)
+    policy                            environment                      success     mean return       failure   steps
+    Original Q-learning               Original                    1.000+-0.000     8.44+-0.03  0.000+-0.000   10.46
+    Original Q-learning               Changed                     0.000+-0.000   -88.98+-0.03  1.000+-0.000     nan
+    Adapted Q-learning (+1000 ep)     Changed                     1.000+-0.000     7.19+-0.02  0.000+-0.000   15.77
+    Value iteration                   Changed, known dynamics     1.000+-0.000     7.19+-0.02  0.000+-0.000   15.77
+    adaptation: greedy success >= 0.95 after 50 episodes (median; range 40-80) of continued learning with epsilon 0.1
+    adapted policy: optimal action in 99% of cells; V(start) 2.787 vs optimal 2.787
+    same change in the DETERMINISTIC world (Experiment A agent): before adaptation success 0.00, after 1.00 (steps 12); value iteration 12 steps
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-14\outputs\exp_c_adaptation.png
+

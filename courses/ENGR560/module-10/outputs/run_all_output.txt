@@ -1,0 +1,58 @@
+==============================================================================================================
+Experiment A: NumPy MLP vs PyTorch (torch 2.15.0+cpu), XOR data, float64
+  PyTorch parameter dtype: torch.float64; loss at initialisation 0.708123, after 2000 steps 0.002227
+
+    quantity                      max |torch - numpy|, at init    after 2000 steps  within 1e-10
+    output logits                                     5.55e-17            0.00e+00          True
+    predicted probabilities                           5.55e-17            1.11e-16          True
+    binary cross-entropy loss                         0.00e+00            1.73e-16          True
+    dJ/dW1 (2 x 4)                                    1.04e-17            4.15e-17          True
+    dJ/db1 (4)                                        1.73e-17            3.71e-17          True
+    dJ/dW2 (4)                                        2.78e-17            3.56e-17          True
+    dJ/db2 (scalar)                                   0.00e+00            2.27e-17          True
+  (weights copied with W1 transposed: nn.Linear stores (out, in) and computes x W^T + b)
+  dtype pitfall: torch.tensor([b2]) with a Python float -> torch.float32; rounding error 5.5e-08. With float32 the trained-network logits differed by ~5e-8, so every parameter is now copied with dtype=torch.float64.
+
+==============================================================================================================
+Experiment B: mini-batch training (torch 2.15.0+cpu, CPU, 1 thread); train 2262 / validation 720 candidates; batch size 64
+    optimizer      lr  best val loss  best epoch  steps to best  stopped  total steps  elapsed s
+    SGD          0.05         0.3428         330          11880      370        13320       12.3
+    SGD           0.1         0.3376         269           9684      309        11124       10.2
+    SGD           0.2         0.3346         225           8100      265         9540        8.7
+    SGD           0.4         0.3301         202           7272      242         8712        7.9
+    SGD           0.8         0.3303          82           2952      122         4392        4.0
+    SGD           1.6         0.3339          82           2952      122         4392        4.1
+    Adam        0.001         0.3467         324          11664      364        13104       16.1
+    Adam        0.002         0.3374         319          11484      359        12924       15.7
+    Adam        0.004         0.3347         271           9756      311        11196       13.6
+    Adam        0.008         0.3290         179           6444      219         7884        9.7
+    Adam        0.016         0.3306          83           2988      123         4428        5.4
+    Adam        0.032         0.3315          59           2124       99         3564        4.3
+
+  selected on validation loss: SGD lr 0.4, Adam lr 0.008
+  steps and time to first reach a validation loss within 1% of the worse optimizer's best (0.3334):
+    SGD     6192 optimizer steps, epoch  172,   5.69 s   (best 0.3301 at 7272 steps, 8.0 s total incl. patience)
+    Adam    4392 optimizer steps, epoch  122,   5.38 s   (best 0.3290 at 6444 steps, 9.6 s total incl. patience)
+  best model for Experiment C: Adam (lr 0.008), checkpoint C:\Users\jakec\.claude\sessions\machine_learning\module-10\outputs\best_Adam.pt
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-10\outputs\exp_b_sgd_vs_adam.png
+
+==============================================================================================================
+Experiment C: inference pipeline. Checkpoint best_Adam.pt: Adam lr 0.008, epoch 179, best validation loss 0.3290, device cpu
+  validation-only thresholds: Policy A 0.37 (the NumPy MLP's was 0.40), Policy B 0.62
+  validation probabilities: mean 0.511, 10/50/90th percentile [0.002, 0.541, 0.995] - a different network gives differently scaled outputs, so the threshold must be re-derived rather than copied
+  reproducibility: reloading the checkpoint -> max output difference 0.0e+00; retraining from scratch with the same seed -> max parameter difference 0.0e+00
+
+  Untouched test images (30 images, 1499 candidates), evaluated once
+    metric                           NumPy MLP (Module 8 folder)                   PyTorch MLP
+    test ROC AUC                                           0.888          0.889 [0.873, 0.903]
+    Brier score                                            0.134                         0.135
+    high-recall policy recall                              0.917                         0.903
+      precision / FPR at Policy A                  0.726 / 0.409                 0.732 / 0.392
+    high-precision policy prec.                            0.904          0.891 (recall 0.653)
+    trainable parameters                                      81                            81
+    training time                            ~23 s, selected run            9.6 s (6444 steps)
+    inference latency (batch 1499)         ~0.6-1.7 us/candidate      0.15 us/cand. (p95 0.16)
+    single-candidate call latency (fixed PyTorch overhead): median 92 us
+    Policy A recall group-bootstrap 95% interval [0.883, 0.920]; P(recall >= 0.95) = 0%
+    hardware: CPU only (1 thread), torch 2.15.0+cpu
+

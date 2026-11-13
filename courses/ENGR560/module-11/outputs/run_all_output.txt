@@ -1,0 +1,83 @@
+==============================================================================================================
+Experiment A: simulate an image and detect stars
+  image 512 x 512, 50 stars, FWHM 3.0 px, background 100.0 e-, read noise 5.0 e-, 11 hot pixels; true star SNR 6.0-153
+  detector steps:
+    1. background (sigma-clipped median) 99.92 e-, RMS 11.17 e- (expected sqrt(B + RN^2) = 11.18)
+    2. background subtracted
+    3. Gaussian filter (sigma 1.27 px): background RMS drops to 2.50 e- (4.5x less noise per pixel)
+    4. local maxima: 4962 (almost all are noise bumps)
+    5. threshold 5 x filtered RMS: 61 peaks
+    6. minimum separation 4 px: 61 detections returned (N x 2 array, shape (61, 2))
+  matched to truth (one-to-one, <= 2 px): 49 true matches, 1 missed stars, 12 false detections (11 of them are hot pixels)
+  recall 0.98, precision 0.80; missed stars' true SNR: [6.4]
+  peak-pixel position error of matched detections: median 0.37 px (integer pixels - centroiding comes in Experiment B)
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-11\outputs\exp_a_detections.png
+
+==============================================================================================================
+Experiment B: centroid accuracy (20 images x 50 stars per condition; fixed nominal architecture)
+
+    condition         method                  recall   FP   median     p90    RMSE          fitted sigma
+    nominal focus     weighted centroid        0.976  317    0.066   0.424   0.299                      
+    nominal focus     Gaussian PSF fit         0.976  317    0.043   0.266   0.182      1.27 (true 1.27)
+    moderate defocus  weighted centroid        0.909  318    0.090   0.469   0.306                      
+    moderate defocus  Gaussian PSF fit         0.909  318    0.080   0.421   0.306      1.91 (true 1.91)
+    strong defocus    weighted centroid        0.802  340    0.176   0.716   0.416                      
+    strong defocus    Gaussian PSF fit         0.802  340    0.137   0.659   0.406      2.76 (true 2.76)
+
+  By true SNR (median / 90th percentile centroid error in px; recall per bin):
+    condition / method                                    SNR 0-10                 SNR 10-20                 SNR 20-50                SNR 50-100               SNR 100-inf
+    nominal focus: recall                           recall 114/123            recall 156/163            recall 269/275            recall 232/234            recall 205/205
+      weighted centroid                              0.526 / 1.022             0.232 / 0.524             0.099 / 0.199             0.033 / 0.074             0.016 / 0.030
+      Gaussian PSF fit                               0.323 / 0.679             0.148 / 0.329             0.057 / 0.135             0.027 / 0.057             0.013 / 0.028
+    moderate defocus: recall                        recall 124/199            recall 154/162            recall 253/260            recall 206/207            recall 172/172
+      weighted centroid                              0.505 / 1.022             0.243 / 0.507             0.112 / 0.219             0.052 / 0.107             0.034 / 0.072
+      Gaussian PSF fit                               0.501 / 0.982             0.188 / 0.439             0.094 / 0.202             0.042 / 0.085             0.022 / 0.044
+    strong defocus: recall                           recall 87/264            recall 168/182            recall 225/231            recall 186/187            recall 136/136
+      weighted centroid                              0.741 / 1.362             0.425 / 0.809             0.213 / 0.401             0.109 / 0.198             0.068 / 0.135
+      Gaussian PSF fit                               0.778 / 1.413             0.355 / 0.764             0.164 / 0.349             0.069 / 0.142             0.033 / 0.071
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-11\outputs\exp_b_centroid_vs_snr.png
+
+==============================================================================================================
+Experiment C: our detector vs photutils DAOStarFinder
+  DAOStarFinder threshold multiplier on the calibration images (precision / recall): 1.0: 0.051/0.920, 1.5: 0.051/0.920, 2.0: 0.052/0.920, 2.5: 0.072/0.920, 3.0: 0.174/0.904, 4.0: 0.857/0.862, 5.0: 1.000/0.818  -> selected k = 5.0
+  centroid-uncertainty calibration on 10 separate nominal images: std of (error / model sigma) per axis = 1.118 over 982 values -> uncertainty_scale = 1.118
+
+  Configuration: nominal (10 images x 50 stars)
+    metric                               ours (all)   ours (not SHARP)       DAO, 5 x rms
+    detection precision                       0.762              0.974              1.000
+    detection recall                          0.982              0.982              0.766
+    false positives (total)                     153                 13                  0
+    median centroid error [px]                0.052              0.052              0.056
+    90th-pct centroid error                   0.271              0.271              0.189
+    processing time per image               1347 ms            1347 ms              84 ms
+    same stars only (383 detected by both ours and DAO 5.0 x rms): median / p90 centroid error ours 0.037 / 0.134 px, DAO 0.056 / 0.189 px
+    time breakdown (ours): detection alone 124 ms; the rest is one PSF fit per detection
+    our false positives by quality flag: {'SHARP': 134, 'SHARP|EDGE': 6, 'BAD_FIT': 3, 'EDGE': 2, 'OK': 2, 'EDGE|LOW_SNR': 2, 'CROWDED': 1, 'EDGE|LOW_SNR|BAD_FIT': 1, 'EDGE|BAD_FIT': 1, 'LOW_SNR|BAD_FIT': 1}
+    calibrated uncertainty, matched unflagged (no SHARP/BAD_FIT) stars: radial error within 1 sigma_r 72.2% (2-D Gaussian expectation 63.2% for sigma_r^2 = sx^2 + sy^2), within 2 sigma_r 98.6% (expectation 98.2%)
+
+  Configuration: low SNR (10 images x 50 stars)
+    metric                               ours (all)   ours (not SHARP)       DAO, 5 x rms
+    detection precision                       0.640              0.993              0.990
+    detection recall                          0.538              0.536              0.208
+    false positives (total)                     151                  2                  1
+    median centroid error [px]                0.186              0.186              0.125
+    90th-pct centroid error                   0.519              0.520              0.332
+    processing time per image                610 ms             610 ms              82 ms
+    same stars only (104 detected by both ours and DAO 5.0 x rms): median / p90 centroid error ours 0.110 / 0.226 px, DAO 0.125 / 0.332 px
+    time breakdown (ours): detection alone 119 ms; the rest is one PSF fit per detection
+    our false positives by quality flag: {'SHARP': 142, 'SHARP|EDGE': 7, 'LOW_SNR': 1, 'EDGE': 1}
+    calibrated uncertainty, matched unflagged (no SHARP/BAD_FIT) stars: radial error within 1 sigma_r 66.7% (2-D Gaussian expectation 63.2% for sigma_r^2 = sx^2 + sy^2), within 2 sigma_r 96.6% (expectation 98.2%)
+
+  Final output - first rows of the integrated catalogue (nominal image, brightest first):
+            x        y  flux [e-]     snr  centroid_uncertainty [px]  quality_flags
+       25.052   27.695      22986   143.8                      0.018  0 (OK)
+      159.811  186.083      20513   135.2                      0.021  0 (OK)
+      182.793  187.044      19139   130.1                      0.019  0 (OK)
+      457.286  367.677      17711   124.4                      0.020  0 (OK)
+      465.193  155.800        362     7.9                      0.282  8 (LOW_SNR)
+      137.604  281.731        514     7.5                      0.527  8 (LOW_SNR)
+      262.255  257.440        302     6.6                      0.379  8 (LOW_SNR)
+      371.269   89.509        314     6.2                      0.441  8 (LOW_SNR)
+    keys: ['centroid_uncertainty', 'flux', 'quality_flags', 'sigma', 'snr', 'sx', 'sy', 'x', 'y']; flag bits {1: 'SHARP', 2: 'EDGE', 4: 'CROWDED', 8: 'LOW_SNR', 16: 'BAD_FIT'}
+

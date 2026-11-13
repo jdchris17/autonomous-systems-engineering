@@ -1,0 +1,45 @@
+  worker classical: 273 s
+  worker hybrid: 108 s
+
+Experiment C: classical vs hybrid complete systems (6 fields per condition, same images / camera / catalogue / rules)
+  condition               mode       solved false acc correct IDs wrong useful src artifacts stars lost cent err    RMS att med att max  ms/img
+  nominal                 classical    6/6          0     134/135     1       22.3       7.3          0    0.057  0.119    4.5"    7.4"    3676
+  nominal                 hybrid       6/6          0     133/135     0       22.2       0.2          0    0.055  0.096    4.5"    7.4"    1509
+  low SNR                 classical    6/6          0      96/144     3       16.0       7.5          0    0.165  0.492    7.8"   23.1"    2071
+  low SNR                 hybrid       5/6          0      83/144     1       15.0       0.0          6    0.158  0.458    6.0"   20.3"     953   codes: INSUFFICIENT_MATCHES
+  strong defocus          classical    6/6          0     132/132     2       22.0       8.2          0    0.208  0.381   12.8"   32.1"    3753
+  strong defocus          hybrid       6/6          0     121/132     0       20.2       0.8         10    0.190  0.318   18.1"   32.2"    1234
+  hot pixels & streaks    classical    6/6          0     137/138     3       22.8      31.0          0    0.051  0.158    3.8"    6.3"   12201
+  hot pixels & streaks    hybrid       6/6          0     133/138     0       22.2       0.2          3    0.051  0.085    3.8"    7.9"    1762
+  missing & uncatalogued  classical    6/6          0     121/121     0       20.2       6.7          0    0.053  0.079    2.0"    7.9"    5514
+  missing & uncatalogued  hybrid       6/6          0     120/121     0       20.0       0.0          1    0.052  0.079    2.0"    7.9"    2828
+  incorrect sky / catalog classical    0/6          0           -     0        8.2       5.3          0      nan    nan    nan"    nan"    3763   codes: INSUFFICIENT_MATCHES, NO_HYPOTHESIS
+  incorrect sky / catalog hybrid       0/6          0           -     0        8.0       0.0          1      nan    nan    nan"    nan"    1517   codes: INSUFFICIENT_MATCHES, NO_HYPOTHESIS
+
+  stage times, mean over all 36 fields (ms):
+    mode          calibration      detection classification    centroiding identification   verification          total
+    classical            85.7          213.7            0.1         4535.5          311.3            0.7         5162.9
+    hybrid               85.3          218.0          165.9          807.9          338.5            0.7         1633.7
+
+  peak memory:
+    classical  tracemalloc peak during one solve 5.0 MB (Python/NumPy heap); process peak working set 250 MB (before the first pipeline is built: 103 MB)
+    hybrid     tracemalloc peak during one solve 5.0 MB (Python/NumPy heap); process peak working set 532 MB (before the first pipeline is built: 103 MB)
+
+| Metric | Classical | Hybrid |
+|---|---|---|
+| Verified solve success rate (30 solvable fields) | 30/30 | 29/30 |
+| False solutions accepted (6 incorrect-sky/catalogue fields) | 0/6 | 0/6 |
+| Correct star IDs (of catalogue stars in frame) | 620/670 | 590/670 |
+| Incorrect star associations | 9 | 1 |
+| Median centroid error, matched stars (px) | 0.073 | 0.070 |
+| Reprojection RMS (px) | 0.294 | 0.249 |
+| Attitude error vs truth, median / p90 (arcsec) | 4.1 / 15.0 | 4.5 / 19.7 |
+| Mean time: calibration (ms) | 85.7 | 85.3 |
+| Mean time: detection (ms) | 213.7 | 218.0 |
+| Mean time: classification (ms) | 0.1 | 165.9 |
+| Mean time: centroiding (ms) | 4535.5 | 807.9 |
+| Mean time: identification (ms) | 311.3 | 338.5 |
+| Mean time: verification (ms) | 0.7 | 0.7 |
+| Mean time: total (ms) | 5162.9 | 1633.7 |
+| Peak memory: tracemalloc during a solve / process working set (MB) | 5.0 / 250 | 5.0 / 532 |
+  saved C:\Users\jakec\Development\Autonomous Systems Engineering Curriculum\courses\ENGR560\final-project\outputs\exp_c_associations.png and C:\Users\jakec\Development\Autonomous Systems Engineering Curriculum\courses\ENGR560\final-project\outputs\exp_c_system_comparison.png

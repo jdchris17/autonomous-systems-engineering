@@ -1,0 +1,10 @@
+{
+  "width": 512,
+  "height": 512,
+  "focal_length_px": 6875.493541569879,
+  "cx": 255.5,
+  "cy": 255.5,
+  "psf_fwhm_px": 3.0,
+  "focal_length_tolerance": 0.03,
+  "name": "module13-synthetic"
+}

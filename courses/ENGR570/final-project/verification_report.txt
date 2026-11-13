@@ -1,0 +1,136 @@
+ENDURIA NAVIGATION ENGINE - CONSOLIDATED VERIFICATION REPORT
+============================================================================
+Generated 2026-11-12 11:40:42 local time
+
+SOFTWARE VERSIONS
+  enduria            1.0.0
+  python             3.14.5
+  platform           Windows-11-10.0.26200-SP0
+  numpy              2.4.4
+  scipy              1.17.1
+  astropy            8.0.2
+  pyerfa             2.0.1.5
+  astropy-iers-data  0.2026.11.9.0.35.9
+  geographiclib      2.1
+  pytest             9.0.3
+  Earth-orientation and leap-second data: bundled tables, downloads disabled
+
+REPRODUCIBILITY
+  Base seed 5709; each test adds a fixed offset (numpy.random.default_rng).
+  Monte Carlo trials per population: 500 (environment variable ENDURIA_TRIALS).
+
+1. PASSING TESTS BY VERIFICATION LEVEL
+----------------------------------------------------------------------------
+Level                  Test set                                         passed  failed  time
+Unit                   Module 1                                             56       0     1 s
+Unit                   Module 2                                             61       0     3 s
+Unit                   Module 3                                            124       0     2 s
+Unit                   Module 4                                             45       0     2 s
+Unit                   Module 5                                             73       0     1 s
+Unit                   Module 6                                             96       0     3 s
+Unit                   Module 7                                             32       0    10 s
+Unit                   Module 8                                             48       0    58 s
+                       purpose: individual algorithms
+Integration            Work Package A: architecture                         28       0     3 s
+Integration            Work Package B: pipeline contract                    10       0     4 s
+                       purpose: subsystems as one package; the result contract
+System                 Suite 1: global geographic validation                74       0     6 s
+                       purpose: complete navigation operation
+Independent reference  Suite 2: independent astronomical verification       54       0     6 s
+                       purpose: detect shared modelling errors
+Robustness             Suite 3: calibration and orientation invariance      22       0     7 s
+Robustness             Suite 4: navigation failure modes                    73       0    13 s
+                       purpose: degraded and invalid conditions
+Statistical            Suite 5: statistical calibration                     10       0   290 s
+                       purpose: error and uncertainty claims
+----------------------------------------------------------------------------
+TOTAL                                                                      806       0
+
+Of the passing tests, 3 are marked `known_limitation`: they pass when the software
+correctly declines to claim something it cannot know. They document limits, not capability:
+  tests/test_suite4_failure_modes.py::test_a_mismatch_inside_the_noise_cannot_be_detected
+  tests/test_suite4_failure_modes.py::test_constant_horizontal_acceleration_is_not_detected_and_not_denied[0.005]
+  tests/test_suite4_failure_modes.py::test_constant_horizontal_acceleration_is_not_detected_and_not_denied[0.02]
+
+2. TOLERANCES
+----------------------------------------------------------------------------
+  ideal_position_m = 0.001
+     Perfect, noise-free, correctly modelled case. 1 mm is far below any
+     operational significance and far above double-precision rounding (about
+     1e-9 m at Earth radius). Timestamps carry nanoseconds.
+  independent_position_m = 0.01
+     Engine versus an Astropy-generated observation. Measured agreement is 2
+     to 8 micrometres, because both chains end in the same ERFA routines. 1
+     cm is 0.3 milliarcseconds of direction: any error in frames, signs,
+     time scales or iteration would exceed it by orders of magnitude.
+  independent_direction_mas = 0.1
+     Star directions, engine chain versus Astropy frames, with and without
+     atmosphere. 0.1 mas is 3 mm on the ground.
+  earth_rotation_rad = 1e-11
+     GCRS to ITRS rotation, engine versus Module 2 and Astropy: same IAU
+     2006/2000A model; 1e-11 rad is 0.06 mm at the surface.
+  geodesy_m = 1e-06
+     Closed-form ellipsoid geometry against Astropy EarthLocation.
+  distance_relative = 1e-09
+     GeographicLib (Karney) against an independent Vincenty iteration, which
+     itself converges to about 0.1 mm.
+  calibration_arcsec = 0.5
+     Recovered camera-IMU rotation in the noise-free diverse-attitude case;
+     limited by the declared noise floor and the prior.
+  coverage_sigmas = 3.5
+     Monte Carlo coverage of the 95 % ellipse must lie within this many
+     binomial standard errors of 95 %. With 500 trials one standard error is
+     0.97 percentage points.
+  nees_sigmas = 3.5
+     Mean NEES (2 degrees of freedom) must lie within this many standard
+     errors, 2/sqrt(trials), of 2.
+
+3. STATISTICAL CALIBRATION (suite 5)
+----------------------------------------------------------------------------
+  Population                               fixes   median     RMS    95th  reported  NEES   95% cover (allowed)
+  random errors only                         498      103     128     223       130   2.00    95.0% (95 +/- 3.4)
+  shared systematic errors, declared         500    7,970   9,172  15,376     9,144   2.01    95.0% (95 +/- 3.4)
+  calibration states estimated               249      195     227     384       239   1.80    97.6% (95 +/- 4.8)
+  precision hardware                         249       42      49      83        47   2.17    93.2% (95 +/- 4.8)
+  shared systematic errors, NOT declared     125    7,484   9,128  15,726       131 12584.93     0.8% (95 +/- 6.8)
+  Distances in metres. 'reported' is the RMS of the engine's own 1-sigma. Theory: NEES 2.00, cover 95 %.
+
+4. KNOWN LIMITATIONS (not failures; things the system cannot do)
+----------------------------------------------------------------------------
+  1. Constant acceleration is invisible.
+     A steady horizontal acceleration is indistinguishable from a tilt.
+     Every check passes and the fix is wrong by about 650 m per mm/s^2. The
+     result stays VALID and carries the limitation in `assumptions`,
+     `integrity.unverified_assumptions` and `accuracy_limitations`.
+     Demonstrated by suite 4,
+     test_constant_horizontal_acceleration_is_not_detected_and_not_denied.
+  2. A wrong star match inside the centroid noise is invisible.
+     A catalog identity error smaller than about 3.7 sigma of the centroid
+     noise passes residual screening. Demonstrated by suite 4,
+     test_a_mismatch_inside_the_noise_cannot_be_detected.
+  3. A fixed calibration error is not observable at one attitude.
+     The engine detects this, withholds the calibration estimate and reports
+     the declared calibration uncertainty in full (suite 3). It cannot
+     detect a calibration error LARGER than declared.
+  4. Declared uncertainties are taken on trust.
+     Coverage is honest only when the declared sigmas describe the real
+     errors. Suite 5 shows coverage collapsing to a few percent when the
+     same errors are present but not declared.
+  5. A camera focal-length error has no declared-uncertainty parameter.
+     It shows up in the star residuals and degrades the status, but it is
+     not in the covariance.
+  6. Refraction is a standard-atmosphere model.
+     Temperature inversions and horizontal gradients are not modelled. Stars
+     below 3 degrees altitude are not used.
+  7. The independent reference path is not fully independent.
+     Astropy assembles its frames differently but calls the same ERFA
+     routines and reads the same bundled IERS table. Suite 2 detects errors
+     in how the engine arranges the physics, not errors inside ERFA or in
+     the Earth-orientation data.
+  8. Earth-orientation prediction uncertainty uses a recalled formula.
+     The growth law attributed to IERS Bulletin A (Module 8) has not been
+     checked against the bulletin.
+  9. No real data.
+     Star detection, centroiding and catalog matching happen before this
+     interface (ENGR 560). No real image, IMU record or site has been used.
+     All error magnitudes are illustrative assumptions.

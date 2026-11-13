@@ -1,0 +1,269 @@
+C:\Users\jakec\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\tree\_classes.py:1347: FutureWarning: Value `"friedman_mse"` for `criterion` is deprecated and will be removed in 1.11. It maps to `"squared_error"` as both were always equivalent. Use `criterion="squared_error"` to remove this warning.
+  warnings.warn(
+==============================================================================================================
+Experiment A: bagging from first principles (3 engineered features)
+
+  Part 1 - one bootstrap sample of n = 2982: max multiplicity 6, observations drawn more than once 26.3%, never drawn 37.4%
+    unique fraction over 2000 samples: 0.6320 +- 0.0058; theory 1 - (1 - 1/n)^n = 0.6322  (limit 1 - 1/e = 0.6321)
+    image-level bootstrap: unique images 0.6351 (theory 0.6352), unique candidates 0.6351, sample size / n = 1.000 +- 0.014 (varies, because images differ in size)
+
+  Part 3 - vs sklearn BaggingClassifier(25 unrestricted trees): rebuilding every member from sklearn's own bootstrap samples and tree seeds -> all 25 members identical: True; ensemble max |proba diff| 2.2e-16
+    with independent random samples: test AUC mine 0.871 vs sklearn 0.874 (same algorithm, different draws)
+
+  Part 4 - ensemble size: AUC mean over 5 grouped folds; spread across 5 seeds
+        M  train AUC  val AUC  sd over seeds  prediction sd across seeds
+        1      0.910    0.756         0.0038                      0.1864
+        5      0.995    0.854         0.0010                      0.0935
+       10      0.999    0.870         0.0013                      0.0666
+       25      1.000    0.880         0.0012                      0.0418
+       50      1.000    0.883         0.0005                      0.0302
+      100      1.000    0.884         0.0007                      0.0215
+      200      1.000    0.886         0.0002                      0.0148
+
+  Part 5 - candidate vs image bootstrap vs single tree (100 trees; 5 seeds)
+    model                 grouped-CV AUC  test AUC  test acc  worst image  10th pct image  member AUC  member spread
+    single tree              0.760+-0.024     0.750     0.749        0.607           0.679           -              -
+    candidate bagging        0.884+-0.011     0.880     0.783        0.797           0.820       0.749          0.255
+    image bagging            0.882+-0.013     0.879     0.782        0.786           0.822       0.748          0.255
+    image minus candidate bagging, test AUC: -0.0012 +- 0.0021 over seeds
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-9\outputs\exp_a_bagging.png
+
+==============================================================================================================
+Experiment B: random forests and feature randomisation
+
+  Part 1 - baseline (grouped 5-fold CV; train AUC = on the training folds)
+    representation  model                      train AUC  val AUC     sd
+    eng             decision tree (unrestricted)     1.000    0.760  0.024
+    eng             decision tree (depth 6)        0.924    0.879  0.010
+    eng             random forest (200 trees)      1.000    0.889  0.014
+    hybrid          decision tree (unrestricted)     1.000    0.792  0.016
+    hybrid          decision tree (depth 6)        0.935    0.874  0.009
+    hybrid          random forest (200 trees)      1.000    0.931  0.012
+
+  Part 2 - feature randomisation (200 trees, unrestricted depth), grouped-CV AUC
+    eng     max_features=1: 0.889+-0.014, max_features=2: 0.887+-0.014, max_features=3: 0.885+-0.013   (3 = all features = bagged trees)
+    hybrid  max_features=1: 0.931+-0.014, max_features=2: 0.932+-0.013, max_features=3: 0.931+-0.012, max_features=5: 0.930+-0.012, max_features=8: 0.929+-0.011, max_features=11: 0.925+-0.010   (11 = all features = bagged trees)
+
+  Part 3 - ensemble size and tree complexity (hybrid features), grouped-CV AUC
+        M      d=4,leaf=1      d=4,leaf=5     d=4,leaf=20      d=8,leaf=1      d=8,leaf=5     d=8,leaf=20     d=16,leaf=1     d=16,leaf=5    d=16,leaf=20   d=None,leaf=1   d=None,leaf=5  d=None,leaf=20
+       10           0.899           0.899           0.901           0.919           0.919           0.918           0.913           0.920           0.920           0.911           0.922           0.920
+       25           0.910           0.910           0.908           0.925           0.924           0.922           0.924           0.926           0.922           0.924           0.927           0.922
+       50           0.912           0.912           0.910           0.927           0.925           0.922           0.929           0.929           0.924           0.928           0.930           0.924
+      100           0.910           0.911           0.909           0.927           0.927           0.924           0.930           0.930           0.925           0.931           0.930           0.925
+      200           0.911           0.911           0.909           0.929           0.928           0.923           0.931           0.931           0.925           0.931           0.931           0.925
+    best: M = 200, max_depth = None, min_samples_leaf = 5 -> grouped-CV AUC 0.931 +- 0.014
+
+  Part 4 - tree-error correlation on independent validation images (fold 0; 100 trees each)
+    representation  ensemble                       mean tree acc  mean error corr  ens. acc  ens. AUC
+    eng             bagged trees (max_features=3)          0.760            0.444     0.787     0.890
+    eng             random forest (max_features=1)         0.754            0.398     0.799     0.891
+    hybrid          bagged trees (max_features=11)         0.785            0.359     0.831     0.930
+    hybrid          random forest (max_features=1)         0.745            0.232     0.829     0.935
+    hybrid          random forest (max_features=3)         0.777            0.305     0.841     0.937
+
+  Part 5 - out-of-bag vs grouped CV vs the untouched test images (hybrid features)
+    selected forest (M=200, depth=None, leaf=5): OOB AUC 0.933 (OOB accuracy 0.834); grouped-CV AUC 0.931; test AUC on 30 unseen images 0.920
+    bagged deep trees (max_features=all): OOB AUC 0.929, grouped-CV AUC 0.925, test AUC 0.910
+    own bagging, candidate-level bootstrap: OOB AUC 0.927 (rows scored 100%, mean trees per row 73); test AUC 0.911
+    own bagging, image-level bootstrap: group-OOB (trees that never saw the IMAGE) AUC 0.924 (rows scored 100%, mean trees per row 72); test AUC 0.911
+
+  Feature importance (selected forest, hybrid features): impurity (MDI, training data) vs permutation (AUC drop on the untouched images, 10 repeats)
+    feature          MDI  permutation
+    roundness      0.187   0.154 +- 0.008
+    log width      0.238   0.129 +- 0.009
+    log SNR        0.135   0.037 +- 0.004
+    PC-C 3         0.136   0.017 +- 0.003
+    PC-C 4         0.056   0.007 +- 0.001
+    PC-C 8         0.051   0.005 +- 0.001
+    PC-C 6         0.047   0.003 +- 0.001
+    PC-C 2         0.042   0.003 +- 0.001
+    PC-C 5         0.041   0.003 +- 0.000
+    PC-C 7         0.036   0.002 +- 0.000
+    PC-C 1         0.032   0.001 +- 0.001
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-9\outputs\exp_b_random_forest.png
+
+==============================================================================================================
+Experiment C: AdaBoost and gradient boosting (hybrid features, grouped 5-fold CV)
+
+  Part 1 - AdaBoost, grouped-CV AUC at selected numbers of weak learners
+    learner          lr      n=1     n=10     n=50    n=100    n=200    n=500      best (n)
+    depth-1 tree    0.1    0.675    0.835    0.854    0.862    0.871    0.883   0.883 (494)
+    depth-1 tree    0.5    0.675    0.844    0.872    0.884    0.893    0.901   0.901 (500)
+    depth-1 tree    1.0    0.675    0.833    0.878    0.887    0.894    0.902   0.902 (395)
+    depth-2 tree    0.1    0.760    0.854    0.878    0.886    0.893    0.901   0.901 (500)
+    depth-2 tree    0.5    0.760    0.871    0.894    0.900    0.905    0.917   0.917 (496)
+    depth-2 tree    1.0    0.760    0.879    0.910    0.915    0.920    0.920   0.921 (364)
+    single stump: 0.675
+    shallow tree (depth 3): 0.832
+    selected AdaBoost: depth-2 trees, learning rate 1.0, 364 learners
+
+  Part 2 - gradient boosting: best iteration by validation log loss (mean over grouped folds)
+       lr depth leaf subsample best iter val log loss val AUC there val LL @400 train LL @400
+     0.03     5   20       1.0       252       0.3343         0.929      0.3411        0.1316
+      0.1     5   20       1.0        72       0.3374         0.928      0.4346        0.0221
+     0.03     5   20       0.5       251       0.3378         0.929      0.3430        0.1424
+      0.1     5    1       1.0        60       0.3379         0.927      0.4350        0.0155
+     0.03     5    1       1.0       216       0.3384         0.927      0.3443        0.1052
+      0.3     5    1       1.0        14       0.3396         0.927      0.7320        0.0001
+     0.03     5    1       0.5       209       0.3412         0.928      0.3510        0.1002
+      0.1     5   20       0.5        66       0.3415         0.927      0.4262        0.0282
+      0.3     5   20       1.0        22       0.3420         0.927      0.7846        0.0002
+      0.1     3   20       1.0       133       0.3421         0.926      0.3666        0.1141
+     0.03     3    1       1.0       399       0.3440         0.926      0.3441        0.2332
+     0.03     3   20       1.0       354       0.3444         0.926      0.3447        0.2405
+    ... worst configurations (overfitting):
+      0.3     5   20       0.5        14       0.3615         0.919      0.7817        0.0006
+      0.3     5   20       1.0        22       0.3420         0.927      0.7846        0.0002
+      0.3     5    1       0.5        10       0.3717         0.916      0.9481        0.1545
+    selected GB: learning rate 0.03, depth 5, min leaf 20, subsample 1.0, 252 trees
+
+  Part 3 - out-of-fold errors by physical subtype (error rate at p = 0.5 / mean log loss)
+    subtype                       tree (depth 6)         random forest              AdaBoost     gradient boosting
+    bright star                    0.015 / 0.200         0.005 / 0.037         0.007 / 0.479         0.005 / 0.039
+    faint star                     0.170 / 0.829         0.192 / 0.393         0.212 / 0.637         0.180 / 0.390
+    hot pixel                      0.261 / 0.865         0.062 / 0.270         0.073 / 0.554         0.065 / 0.180
+    diffuse                        0.065 / 0.218         0.035 / 0.121         0.047 / 0.527         0.044 / 0.130
+    elongated                      0.147 / 0.358         0.036 / 0.173         0.060 / 0.567         0.045 / 0.129
+    noise peak                     0.681 / 1.061         0.627 / 0.855         0.602 / 0.702         0.632 / 1.001
+    unresolved (width floor)         0.330 / 0.994         0.211 / 0.431         0.237 / 0.605         0.222 / 0.420
+    ALL                            0.208 / 0.654         0.170 / 0.332         0.181 / 0.594         0.168 / 0.335
+    grouped-CV AUC: tree (depth 6) 0.876, random forest 0.931, AdaBoost 0.921, gradient boosting 0.928
+    AdaBoost final training-sample weights (SAMME, reconstructed from the fitted learners):
+      bright star                mean weight x n =   0.10   share of the top-1% weights   3.3%   (share of data 13.5%)
+      faint star                 mean weight x n =   1.20   share of the top-1% weights  20.0%   (share of data 40.1%)
+      hot pixel                  mean weight x n =   0.54   share of the top-1% weights   3.3%   (share of data 11.4%)
+      diffuse                    mean weight x n =   0.40   share of the top-1% weights  13.3%   (share of data 11.4%)
+      elongated                  mean weight x n =   0.52   share of the top-1% weights   0.0%   (share of data 11.2%)
+      noise peak                 mean weight x n =   2.75   share of the top-1% weights  60.0%   (share of data 12.3%)
+      unresolved (width floor)   mean weight x n =   1.15   share of the top-1% weights   3.3%   (share of data 11.5%)
+
+  Part 4 - label contamination of the TRAINING labels (all 60 development images); AUC on the 30 untouched test images (clean labels), mean of 3 seeds
+         q       random forest            AdaBoost   gradient boosting     KNN (k=45, eng)
+       0.0               0.920               0.919               0.922               0.893
+      0.02               0.921               0.912               0.920               0.893
+      0.05               0.916               0.903               0.912               0.893
+       0.1               0.917               0.896               0.911               0.890
+       0.2               0.904               0.876               0.886               0.879
+    drop from q=0 to q=0.20: random forest -0.016, AdaBoost -0.043, gradient boosting -0.036, KNN (k=45, eng) -0.014
+
+  Part 5 - boosting as gradient descent in function space (6 observations)
+    scores F            [ 0.4 -1.2 -0.3  2.   0.7  0.1]
+    labels y            [1. 0. 1. 1. 0. 0.]
+    -dL/dF (numerical)  [ 0.401312 -0.231475  0.574443  0.119203 -0.668188 -0.524979]
+    y - p (analytic)    [ 0.401312 -0.231475  0.574443  0.119203 -0.668188 -0.524979]   max |difference| 1.4e-10
+    real data, first boosting step: initial score F0 = log-odds of the star fraction = 0.1478; pseudo-residuals y - p0 fitted by a depth-1 regression tree (split on feature 0 at 0.382); Newton leaf values [ 0.4698 -1.4732]
+    reproduces sklearn's first iteration: max |F1_mine - F1_sklearn| = 4.4e-16; log loss 0.6904 -> 0.6008
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-9\outputs\exp_c_boosting.png
+
+==============================================================================================================
+Experiment D: voting, stacking and error diversity
+
+  Part 4 - nested grouped evaluation: the WHOLE procedure (selection, calibration, weights, meta-model) refit inside each of 5 outer folds
+    fold 0: params {'KNN': {'k': 45}, 'RBF SVM': {'C': 10, 'gamma': 1.0}, 'random forest': {'leaf': 5}}; soft-vote weights (KNN, SVM, RF) [0.15 0.   0.85]
+    fold 1: params {'KNN': {'k': 45}, 'RBF SVM': {'C': 10, 'gamma': 1.0}, 'random forest': {'leaf': 1}}; soft-vote weights (KNN, SVM, RF) [0.15 0.   0.85]
+    fold 2: params {'KNN': {'k': 45}, 'RBF SVM': {'C': 10, 'gamma': 0.3}, 'random forest': {'leaf': 1}}; soft-vote weights (KNN, SVM, RF) [0.15 0.   0.85]
+    fold 3: params {'KNN': {'k': 45}, 'RBF SVM': {'C': 10, 'gamma': 0.3}, 'random forest': {'leaf': 1}}; soft-vote weights (KNN, SVM, RF) [0.1 0.  0.9]
+    fold 4: params {'KNN': {'k': 45}, 'RBF SVM': {'C': 10, 'gamma': 0.3}, 'random forest': {'leaf': 1}}; soft-vote weights (KNN, SVM, RF) [0.15 0.   0.85]
+    method                                   outer AUC  accuracy  log loss     ECE
+    KNN                                    0.906+-0.019     0.813     0.371   0.042
+    RBF SVM                                0.899+-0.019     0.801     0.402   0.066
+    random forest                          0.934+-0.008     0.838     0.317   0.038
+    hard vote                              0.814+-0.022     0.816       nan     nan
+    soft vote (equal)                      0.926+-0.014     0.826     0.342   0.048
+    soft vote (weighted)                   0.935+-0.008     0.841     0.316   0.038
+    stacking                               0.935+-0.009     0.841     0.313   0.035
+    best individual (chosen in fold)       0.934+-0.008     0.838     0.317   0.038
+
+  Final procedure fit on all 60 development images: params {'KNN': {'k': 45}, 'RBF SVM': {'C': 10, 'gamma': 1.0}, 'random forest': {'leaf': 1}}
+    OOF AUC on development: KNN 0.904, RBF SVM 0.901, random forest 0.932
+    soft-vote weights (KNN, SVM, RF): [0.1 0.  0.9];  meta-classifier coefficients on logits: [0.26  0.047 0.792], intercept 0.011
+
+  Parts 1, 2, 5 - untouched test images (30 images, 1499 candidates). Best individual by development OOF AUC: random forest
+    method                        AUC  accuracy  log loss   Brier     ECE    AUC 95% group-bootstrap CI      AUC - best indiv. (CI)
+    KNN                         0.893     0.783     0.381   0.130   0.031                [0.878, 0.907]     -0.027 [-0.038, -0.015]
+    RBF SVM                     0.890     0.791     0.422   0.139   0.059                [0.873, 0.906]     -0.030 [-0.043, -0.019]
+    random forest               0.920     0.827     0.348   0.114   0.041                [0.905, 0.935]     +0.000 [+0.000, +0.000]
+    hard vote                   0.798     0.801         -   0.199       -                [0.776, 0.820]     -0.122 [-0.138, -0.105]
+    soft vote (equal)           0.913     0.813     0.362   0.120   0.025                [0.897, 0.926]     -0.008 [-0.014, -0.000]
+    soft vote (weighted)        0.921     0.828     0.344   0.113   0.036                [0.906, 0.935]     +0.001 [+0.000, +0.002]
+    stacking                    0.922     0.833     0.342   0.113   0.037                [0.907, 0.935]     +0.002 [-0.001, +0.006]
+    (hard voting outputs 0/1, so its AUC is that of a single operating point and it has no log loss / ECE)
+
+  Part 3 - pairwise diversity on the test images (calibrated 0.5 decisions)
+    pair                          disagree  error corr  both wrong  A right, B wrong  A wrong, B right
+    KNN / RBF SVM                    0.095       0.716       0.165             0.043             0.052
+    KNN / random forest              0.140       0.561       0.125             0.048             0.092
+    RBF SVM / random forest          0.126       0.597       0.128             0.045             0.081
+    error rate by subtype (and how often ALL three are wrong / exactly one is right):
+    subtype                   KNN        RBF SVM  random forest  all 3 wrong  only 1 right  hard vote  stacking
+    bright star             0.005          0.005          0.020        0.000         0.005      0.005     0.000
+    faint star              0.281          0.191          0.202        0.125         0.090      0.215     0.186
+    hot pixel               0.300          0.347          0.076        0.053         0.206      0.259     0.082
+    diffuse                 0.067          0.080          0.061        0.037         0.037      0.074     0.074
+    elongated               0.039          0.051          0.051        0.034         0.011      0.045     0.045
+    noise peak              0.483          0.653          0.574        0.386         0.193      0.580     0.591
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-9\outputs\exp_d_voting_stacking.png
+
+==============================================================================================================
+Experiment E: final system comparison and deployment trade-offs
+  Part 1 - finalists frozen from development-data results: KNN (best single), random forest, gradient boosting, stacking ensemble
+
+  Part 3 - calibration and thresholds from grouped out-of-fold development predictions
+    KNN (best single)    OOF AUC 0.905; Policy A threshold 0.33, Policy B threshold 0.67
+    random forest        OOF AUC 0.932; Policy A threshold 0.31, Policy B threshold 0.64
+    gradient boosting    OOF AUC 0.930; Policy A threshold 0.29, Policy B threshold 0.69
+    stacking ensemble    OOF AUC 0.933; Policy A threshold 0.32, Policy B threshold 0.63
+
+  Part 2 - untouched test images (30 images, 1499 candidates); 1000 group-bootstrap resamples of images
+    model                         AUC [95% CI] log loss  Brier   Policy A: recall / prec / FPR   Policy B: recall / prec / FPR worst img AUC 10th pct  fit s  size KB
+    KNN (best single)     0.893 [0.878, 0.907]    0.381  0.130           0.952 / 0.717 / 0.444           0.624 / 0.923 / 0.061         0.803    0.842    0.0      128
+    random forest         0.920 [0.904, 0.935]    0.351  0.115           0.948 / 0.771 / 0.333           0.738 / 0.878 / 0.121         0.815    0.865    1.0     4860
+    gradient boosting     0.922 [0.907, 0.936]    0.346  0.113           0.952 / 0.771 / 0.333           0.719 / 0.874 / 0.122         0.840    0.867    3.0      744
+    stacking ensemble     0.922 [0.907, 0.935]    0.342  0.113           0.953 / 0.776 / 0.326           0.745 / 0.877 / 0.124         0.833    0.884   14.1     9268
+    group-bootstrap intervals for the frozen policies:
+      KNN (best single)    Policy A recall [0.938, 0.966] (P(>=0.95) = 60%);  Policy B precision [0.900, 0.945] (P(>=0.90) = 98%)
+      random forest        Policy A recall [0.931, 0.964] (P(>=0.95) = 39%);  Policy B precision [0.845, 0.907] (P(>=0.90) = 8%)
+      gradient boosting    Policy A recall [0.936, 0.966] (P(>=0.95) = 58%);  Policy B precision [0.843, 0.900] (P(>=0.90) = 2%)
+      stacking ensemble    Policy A recall [0.935, 0.969] (P(>=0.95) = 61%);  Policy B precision [0.845, 0.904] (P(>=0.90) = 5%)
+    paired AUC differences vs the stacking ensemble (same resampled images):
+      stacking - KNN (best single)    +0.0285  95% CI [+0.0201, +0.0374]
+      stacking - random forest        +0.0022  95% CI [-0.0023, +0.0077]
+      stacking - gradient boosting    +0.0000  95% CI [-0.0040, +0.0045]
+
+  Part 4 - distribution shift (30 newly generated images per scenario; frozen models, calibration and thresholds)
+    model                                        nominal  measurement noise (RN x3  optical defocus (PSF x1.  bright background (B x6)           rare stars (5%)  unseen ghosts (35% of ar
+    KNN (best single)               0.909 (A: 0.95/0.41)      0.882 (A: 0.95/0.41)      0.816 (A: 0.79/0.39)      0.884 (A: 0.95/0.43)      0.878 (A: 0.95/0.40)      0.930 (A: 0.95/0.27)
+    random forest                   0.934 (A: 0.96/0.31)      0.921 (A: 0.93/0.31)      0.722 (A: 0.56/0.28)      0.919 (A: 0.94/0.32)      0.926 (A: 0.95/0.30)      0.957 (A: 0.97/0.21)
+    gradient boosting               0.933 (A: 0.96/0.32)      0.919 (A: 0.95/0.33)      0.740 (A: 0.57/0.28)      0.921 (A: 0.95/0.33)      0.929 (A: 0.96/0.31)      0.954 (A: 0.97/0.20)
+    stacking ensemble               0.937 (A: 0.96/0.30)      0.918 (A: 0.94/0.31)      0.769 (A: 0.64/0.27)      0.916 (A: 0.94/0.32)      0.924 (A: 0.96/0.31)      0.957 (A: 0.96/0.20)
+      member: KNN                                  0.909                     0.882                     0.816                     0.884                     0.878                     0.930
+      member: RBF SVM                              0.902                     0.885                     0.750                     0.879                     0.872                     0.920
+      member: random forest                        0.935                     0.918                     0.718                     0.916                     0.926                     0.957
+    cells: AUC (Policy A recall / FPR at the frozen threshold); members: AUC of the stacking ensemble's own base models
+    AUC drop vs nominal:
+      KNN (best single)             -0.027    -0.093    -0.025    -0.031    +0.021
+      random forest                 -0.014    -0.213    -0.015    -0.008    +0.023
+      gradient boosting             -0.014    -0.193    -0.011    -0.004    +0.022
+      stacking ensemble             -0.019    -0.167    -0.020    -0.013    +0.020
+        member: KNN                 -0.027    -0.093    -0.025    -0.031    +0.021
+        member: RBF SVM             -0.016    -0.152    -0.023    -0.029    +0.018
+        member: random forest       -0.017    -0.217    -0.019    -0.009    +0.023
+    ghosts accepted at Policy A: KNN (best single) 7%, random forest 1%, gradient boosting 2%, stacking ensemble 2%
+    rare stars (5%), Policy B precision: KNN (best single) 0.31, random forest 0.26, gradient boosting 0.26, stacking ensemble 0.27
+
+  Part 5 - prediction latency (CPU only; no GPU used by any model). Single process; random forest n_jobs=1.
+    hardware: ARMv8 (64-bit) Family 8 Model 1 Revision 201, Qualcomm Technologies Inc | 12 logical CPUs | Windows-11-10.0.26200-SP0
+    software: Python 3.14.5, NumPy 2.4.4, SciPy 1.17.1, scikit-learn 1.9.1, BLAS openblas (12 threads)
+    model                       N=10: med / p95 ms       N=100: med / p95 ms      N=1000: med / p95 ms      N=5000: med / p95 ms  us/candidate @5000
+    KNN (best single)              0.86 /     0.96           2.00 /     3.27          13.99 /    15.12          70.43 /    74.61                14.1
+    random forest                 12.46 /    15.12          13.81 /    17.88          25.88 /    28.26          68.93 /    72.04                13.8
+    gradient boosting              0.32 /     0.48           0.58 /     0.67           3.22 /     4.48          15.17 /    16.03                 3.0
+    stacking ensemble             16.33 /    21.81          40.31 /    50.46         256.31 /   263.05        1210.74 /  1228.28               242.1
+    feature extraction             3.50 /     4.23          29.21 /    30.55         755.22 /   761.42        3685.59 /  3696.11   (moments + PCA-C from 32x32 patches)
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-9\outputs\exp_e_final_system.png
+

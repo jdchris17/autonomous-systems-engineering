@@ -1,0 +1,93 @@
+==============================================================================================================
+Experiment A: MLP 2 -> 4 -> 1 on XOR (tanh hidden, sigmoid output, binary cross-entropy, full-batch GD)
+
+  Linear classifier (no hidden layer): w = [0. 0.], b = 0.0000, p = [0.5 0.5 0.5 0.5], loss 0.6931 (= ln 2 = 0.6931); correct at threshold 0.5: 2/4
+  (scanning sign patterns of any line: at most 3/4 points can be on the correct side)
+
+  Random initialisations: 20 seeds per learning rate, 5000 iterations; success = all 4 correct
+     learning rate  success  median final loss  worst final loss
+               0.1    20/20           5.06e-03          5.69e-03
+               0.5    20/20           8.49e-04          1.00e-03
+               1.0    20/20           4.08e-04          4.88e-04
+               3.0    20/20           1.33e-04          1.58e-04
+    for contrast, the minimal 2 -> 2 -> 1 network (lr 0.5, 50 seeds): 32/50 succeed; failed runs stall at loss [0.347] (local minima / plateaus of the nonconvex objective)
+
+  Selected run (seed 0, learning rate 0.5):
+    x = [0 0]  target 0  P(y = 1) = 0.0001  predicted 0
+    x = [0 1]  target 1  P(y = 1) = 0.9992  predicted 1
+    x = [1 0]  target 1  P(y = 1) = 0.9992  predicted 1
+    x = [1 1]  target 0  P(y = 1) = 0.0011  predicted 0
+    final loss 7.01e-04; all four correct: True
+    hidden activations tanh(X W1 + b1):
+[[ 0.636  0.735 -0.648 -0.906]
+ [-0.937  1.     0.983 -0.406]
+ [ 1.    -0.943  0.98  -0.535]
+ [ 0.978  0.977  1.     0.442]]
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-8\outputs\exp_a_xor.png
+
+==============================================================================================================
+Experiment B: backpropagation vs central differences (h = 1e-05), Module 2's numerical_gradient
+
+  Case 1 - XOR network 2 -> 4 -> 1 at initialisation (17 parameters)
+    parameter shape    analytical (first 3 entries)          numerical (first 3 entries)            relative error
+    W1        8        [0.010703 0.015491 0.025939]          [0.010703 0.015491 0.025939]                 1.06e-11
+    b1        4        [0.009621 0.019594 0.007602]          [0.009621 0.019594 0.007602]                 1.12e-11
+    W2        4        [ 0.008442 -0.005389 -0.062154]       [ 0.008442 -0.005389 -0.062154]              1.13e-11
+    b2        scalar   [-0.038083]                           [-0.038083]                                  1.69e-12
+    all parameters together: relative error 1.92e-11  ->  PASS (threshold 1e-6)
+
+  Case 2 - random well-conditioned problem 3 -> 16 -> 1, 64 observations (81 parameters)
+    parameter shape    analytical (first 3 entries)          numerical (first 3 entries)            relative error
+    W1        48       [-0.02048   0.021775  0.013548]       [-0.02048   0.021775  0.013548]              2.67e-11
+    b1        16       [ 0.02044  -0.013109 -0.013406]       [ 0.02044  -0.013109 -0.013406]              1.49e-11
+    W2        16       [-0.032075  0.002525 -0.025249]       [-0.032075  0.002525 -0.025249]              1.39e-11
+    b2        scalar   [-0.052011]                           [-0.052011]                                  1.43e-12
+    all parameters together: relative error 3.36e-11  ->  PASS (threshold 1e-6)
+
+  Step size h (Case 2): relative error of all parameters
+    h = 0.1     E = 6.29e-04
+    h = 0.001   E = 6.39e-08
+    h = 1e-05   E = 3.36e-11
+    h = 1e-07   E = 4.01e-09
+    h = 1e-09   E = 3.65e-07
+
+  Deliberately incorrect backward passes (Case 2): the checker must flag each one
+    bug                                                   W1        b1        W2        b2   overall   verdict
+    tanh' written as (1 - a) instead of (1 - a^2)    7.4e-02   3.6e-02   1.4e-11   1.4e-12   8.2e-02   DETECTED
+    used a ReLU derivative for a tanh layer          6.3e-02   6.9e-02   1.4e-11   1.4e-12   9.3e-02   DETECTED
+    output error (y - p) instead of (p - y)          1.7e-01   1.1e-01   3.1e-01   1.0e-01   3.8e-01   DETECTED
+    forgot to divide by N (sum instead of mean)      9.8e-01   9.8e-01   9.8e-01   9.8e-01   9.8e-01   DETECTED
+    (a bug in the hidden layer leaves the W2 / b2 rows clean - the checker also localises the error)
+
+==============================================================================================================
+Experiment C: NumPy MLP 3 -> 16 -> 1 on the star / artifact features
+  development: 2262 training candidates (45 images), 720 validation candidates (15 images); test: 1499 candidates (30 untouched images)
+
+  Training (learning rate 0.5, early stopping patience 3000 iterations):
+     seed  best iter  stopped at  train loss  val loss  val AUC  fit s
+        0       7770       10770      0.3488    0.3330    0.924   21.5
+        1       5010        8010      0.3537    0.3359    0.922   14.2
+        2       9870       12870      0.3462    0.3328    0.923   22.8
+        3       6870        9870      0.3496    0.3395    0.922   17.5
+        4       3590        6590      0.3573    0.3361    0.923   11.7
+    selected on validation loss: seed 2, iteration 9870
+  thresholds from the validation images: Policy A (recall >= 0.95) 0.40; Policy B (precision >= 0.90) 0.68
+
+  Untouched test images (evaluated once)
+    metric                               gradient boosting (Module 9 finalist)    NumPy neural network   GB, same 3 features
+    test ROC AUC                                                         0.922                   0.888                 0.889
+      95% group-bootstrap CI                                    [0.907, 0.936]          [0.873, 0.902]
+    Brier score                                                          0.113                   0.134                 0.136
+    log loss                                                             0.346                   0.392
+    high-recall policy (A) recall                                        0.952                   0.917
+      precision / FPR at Policy A                                0.771 / 0.333           0.726 / 0.409
+    high-precision policy (B) prec.                                      0.874                   0.904
+    serialized model size                                               744 KB  1.0 KB (81 parameters)                645 KB
+    prediction latency                                      3.0 us / candidate     0.61 us / candidate
+    training time                                                        3.0 s       22.8 s (one seed)
+    Policy A recall group-bootstrap 95% interval [0.902, 0.933], P(recall >= 0.95) = 0%
+    (for information only, not used for any choice: test AUC of all 5 seeds [0.89, 0.888, 0.888, 0.891, 0.891])
+
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-8\outputs\exp_c_star.png
+

@@ -1,0 +1,57 @@
+Experiment C: end-to-end pipelines (frozen CNN threshold P >= 0.902, chosen on validation)
+
+  nominal: 40 images, 2000 simulated stars, detector proposed 1953 of them (0.977), 2846 candidates in total
+    pipeline                    precision  recall(all)         95% CI  recall(prop.)  FP/img  med err  p90 err  ms/img
+    A classical                    0.8655       0.9780  [0.972,0.984]         0.9985    7.60    0.048    0.279    1430
+    A' classical strict            0.8723       0.9765  [0.971,0.983]         0.9969    7.15    0.048    0.277    1430
+    B hybrid (CNN)                 0.9974       0.9710  [0.964,0.978]         0.9939    0.12    0.047    0.275     348
+    C combined (CNN + SHARP)       0.9974       0.9705  [0.963,0.978]         0.9933    0.12    0.047    0.274     348
+    recall(all) difference hybrid - classical: -0.0070  (image bootstrap 95% CI [-0.0105, -0.0040])
+    candidate level (same proposals):  subtype: n | rejected by classical rules | strict rules | CNN
+      bright star      1380 |   0.0% |   0.0% |   0.1%
+      faint star        573 |   0.3% |   0.9% |   1.7%
+      hot pixel         607 |  95.6% |  98.2% | 100.0%
+      elongated         275 |   1.5% |   2.2% |  99.6%
+      noise / other      11 |   0.0% |   0.0% |  63.6%
+
+  low SNR: 40 images, 2000 simulated stars, detector proposed 1115 of them (0.557), 1969 candidates in total
+    pipeline                    precision  recall(all)         95% CI  recall(prop.)  FP/img  med err  p90 err  ms/img
+    A classical                    0.8242       0.5555  [0.535,0.576]         0.9946    5.92    0.179    0.485     710
+    A' classical strict            0.8254       0.5530  [0.531,0.573]         0.9901    5.85    0.179    0.477     710
+    B hybrid (CNN)                 0.9963       0.5385  [0.518,0.558]         0.9650    0.10    0.177    0.443     273
+    C combined (CNN + SHARP)       0.9963       0.5370  [0.514,0.557]         0.9623    0.10    0.176    0.441     273
+    recall(all) difference hybrid - classical: -0.0170  (image bootstrap 95% CI [-0.0220, -0.0120])
+    candidate level (same proposals):  subtype: n | rejected by classical rules | strict rules | CNN
+      bright star       229 |   0.0% |   0.0% |   0.0%
+      faint star        886 |   0.6% |   1.1% |   4.3%
+      hot pixel         610 |  99.7% |  99.7% | 100.0%
+      elongated         232 |   3.0% |   4.3% |  99.1%
+      noise / other      12 |   8.3% |   8.3% |  83.3%
+
+  strong defocus: 40 images, 2000 simulated stars, detector proposed 1605 of them (0.802), 2506 candidates in total
+    pipeline                    precision  recall(all)         95% CI  recall(prop.)  FP/img  med err  p90 err  ms/img
+    A classical                    0.8415       0.8125  [0.798,0.827]         0.9963    7.65    0.129    0.670    1492
+    A' classical strict            0.2255       0.0380  [0.030,0.046]         0.0461    6.53    0.676    1.624    1492
+    B hybrid (CNN)                 0.9960       0.7555  [0.740,0.771]         0.9346    0.15    0.119    0.577     376
+    C combined (CNN + SHARP)       0.9960       0.7555  [0.740,0.772]         0.9346    0.15    0.119    0.577     376
+    recall(all) difference hybrid - classical: -0.0570  (image bootstrap 95% CI [-0.0665, -0.0480])
+    candidate level (same proposals):  subtype: n | rejected by classical rules | strict rules | CNN
+      bright star      1082 |   0.0% |  99.8% |   1.6%
+      faint star        523 |   0.0% |  85.9% |  15.9%
+      hot pixel         610 |  92.8% |  99.7% |  99.8%
+      elongated         260 |   2.3% |   3.1% | 100.0%
+      noise / other      31 |   9.7% |  77.4% |  64.5%
+
+  Part 4: per-image cost breakdown of the hybrid pipeline (mean ms; fits only on retained candidates)
+    condition         detect  patches    CNN    fits  n cand n fitted  hybrid total  classical total  ms per fit
+    nominal             84.9      2.3   47.3     213    71.2     48.7           348             1430         4.4
+    low SNR             86.2      1.7   35.0     150    49.2     27.0           273              710         5.6
+    strong defocus      83.5      2.0   38.8     251    62.6     37.9           376             1492         6.6
+  saved C:\Users\jakec\.claude\sessions\machine_learning\module-12\outputs\exp_c_pipelines.png and C:\Users\jakec\.claude\sessions\machine_learning\module-12\outputs\exp_c_kept_vs_snr.png
+
+  hybrid_detect_sources() demo on test image 30000: 49 sources; columns: x, y, flux, snr, sigma, sx, sy, centroid_uncertainty, quality_flags, cnn_score
+    x   85.489  y  151.579  flux    27200  snr  157.7  sigma_r 0.014  flags OK        cnn_score 1.0000
+    x  157.594  y  310.466  flux    22767  snr  143.1  sigma_r 0.017  flags OK        cnn_score 1.0000
+    x  316.011  y  409.260  flux    22359  snr  141.6  sigma_r 0.015  flags OK        cnn_score 1.0000
+    x  423.968  y  253.086  flux    21829  snr  139.9  sigma_r 0.016  flags OK        cnn_score 1.0000
+    x   40.531  y  222.201  flux    20695  snr  135.8  sigma_r 0.017  flags OK        cnn_score 1.0000
